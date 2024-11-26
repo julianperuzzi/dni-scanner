@@ -40,9 +40,7 @@ function ScanDni() {
 
   useEffect(() => {
     navigator.mediaDevices
-
       .enumerateDevices()
-      
       .then((devices) => {
         const videoInputs = devices.filter((device) => device.kind === "videoinput");
         
@@ -60,15 +58,16 @@ function ScanDni() {
   }, [selectedDeviceId]);
 
   useEffect(() => {
-  // Intentar obtener acceso a la cámara
-  navigator.mediaDevices
-    .getUserMedia({ video: true })
-    .then((stream) => { 
-      console.log("Acceso a la cámara concedido");
-    })
-
-}, []);
-
+    // Intentar obtener acceso a la cámara
+    navigator.mediaDevices
+      .getUserMedia({ video: true })
+      .then((stream) => { 
+        console.log("Acceso a la cámara concedido");
+      })
+      .catch((error) => {
+        console.error("Error al acceder a la cámara:", error);
+      });
+  }, []);
 
   const handleCameraSelect = (deviceId) => {
     setSelectedDeviceId(deviceId);
@@ -101,7 +100,7 @@ function ScanDni() {
         ejemplar: fields[5],
         fechaNacimiento: validateDate(fields[6]),
         fechaEmision: validateDate(fields[7]),
-        cuil: calculateCuil(fields[4], fields[3]),
+        cuil: calculateCuil(fields[4], fields[3]), // Cálculo correcto del CUIL
       };
 
       validateParsedData(parsed);
@@ -204,12 +203,8 @@ function ScanDni() {
               <li><strong>Fecha de Emisión:</strong> {parsedData.fechaEmision}</li>
               <li><strong>CUIL:</strong> {parsedData.cuil}</li>
             </ul>
-            <button onClick={handleSave} style={{ marginTop: "20px", padding: "10px", backgroundColor: "green", color: "white" }}>
-              Guardar en la base de datos
-            </button>
-            <button onClick={handleCancel} style={{ marginTop: "20px", padding: "10px", backgroundColor: "red", color: "white" }}>
-              Cancelar
-            </button>
+            <button onClick={handleSave} style={{ marginTop: "10px" }}>Guardar</button>
+            <button onClick={handleCancel} style={{ marginLeft: "10px" }}>Cancelar</button>
           </div>
         </div>
       )}
