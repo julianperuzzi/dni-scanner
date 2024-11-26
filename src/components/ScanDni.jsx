@@ -1,33 +1,6 @@
 import React, { useState, useEffect } from "react";
 import BarcodeScannerComponent from "react-qr-barcode-scanner";
 
-// Función para calcular el CUIL basado en el DNI y el sexo
-const calculateCuil = (dni, gender) => {
-  let type = gender === "M" ? "20" : "27"; // Hombres: 20, Mujeres: 27
-  const dniDigits = dni.toString().padStart(8, "0"); // Asegurarse de que el DNI tenga 8 dígitos
-  
-  // Se usan los multiplicadores de la fórmula del CUIL
-  const multipliers = [5, 4, 3, 2, 7, 6, 5, 4]; // Los multiplicadores corresponden a la posición en el DNI
-  const dniArray = dniDigits.split("").map(Number); // Convertir el DNI a un array de números
-  
-  // Realizar las multiplicaciones y la suma
-  const sum = multipliers.reduce((acc, mul, index) => acc + dniArray[index] * mul, 0);
-
-  // Calcular el dígito de verificación
-  const remainder = sum % 11;
-  let checkDigit = 11 - remainder;
-
-  if (remainder === 1) {
-    checkDigit = gender === "M" ? 9 : 4; // Si el resto es 1, el dígito varía según el sexo
-    type = "23"; // Cambiar tipo a 23 si el resto es 1
-  } else if (remainder === 0) {
-    checkDigit = 0; // Si el resto es 0, el dígito es 0
-  }
-
-  // Retornar el CUIL con el formato correcto
-  return `${type}-${dniDigits}-${checkDigit}`;
-};
-
 function ScanDni() {
   const [selectedDeviceId, setSelectedDeviceId] = useState(
     localStorage.getItem("selectedCamera") || null
@@ -100,7 +73,7 @@ function ScanDni() {
         ejemplar: fields[5],
         fechaNacimiento: validateDate(fields[6]),
         fechaEmision: validateDate(fields[7]),
-        cuil: calculateCuil(fields[4], fields[3]), // Cálculo correcto del CUIL
+        cuil: fields[4] && fields[4].length === 8 ? fields[4] : null, // Verificar si el DNI contiene un CUIL
       };
 
       validateParsedData(parsed);
@@ -201,7 +174,7 @@ function ScanDni() {
               <li><strong>Ejemplar:</strong> {parsedData.ejemplar}</li>
               <li><strong>Fecha de Nacimiento:</strong> {parsedData.fechaNacimiento}</li>
               <li><strong>Fecha de Emisión:</strong> {parsedData.fechaEmision}</li>
-              <li><strong>CUIL:</strong> {parsedData.cuil}</li>
+              {parsedData.cuil && <li><strong>CUIL:</strong> {parsedData.cuil}</li>}
             </ul>
             <button onClick={handleSave} style={{ marginTop: "10px" }}>Guardar</button>
             <button onClick={handleCancel} style={{ marginLeft: "10px" }}>Cancelar</button>
