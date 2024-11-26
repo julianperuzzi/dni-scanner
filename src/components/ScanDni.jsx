@@ -14,7 +14,7 @@ function DniScanner() {
       const backCamera =
         videoInputs.find((device) =>
           device.label.toLowerCase().includes("back") || device.label.toLowerCase().includes("rear")
-        ) || videoInputs[videoInputs.length - 1]; // Usar última cámara como fallback
+        ) || videoInputs[videoInputs.length ]; // Usar última cámara como fallback
 
       if (backCamera) {
         setSelectedDeviceId(backCamera.deviceId);
