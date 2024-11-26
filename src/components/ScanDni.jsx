@@ -44,7 +44,7 @@ const ScanDni = () => {
       {data && (
         <div className="mt-4">
           <h2 className="text-xl mb-2">¡Lectura Exitosa!</h2>
-          <pre>{data}</pre> {/* Muestra los datos escaneados en formato de texto */}
+          <p>{data}</p> {/* Muestra los datos escaneados en formato de texto */}
         </div>
       )}
 
