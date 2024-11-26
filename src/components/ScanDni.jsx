@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import BarcodeScannerComponent from "react-qr-barcode-scanner";
+import supabase from "./supabaseClient"; // Importar el cliente configurado
+
 
 function ScanDni() {
   const [selectedDeviceId, setSelectedDeviceId] = useState(
