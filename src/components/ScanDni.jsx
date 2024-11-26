@@ -1,56 +1,92 @@
-import React from "react";
+import React, { useState } from "react";
 import BarcodeScannerComponent from "react-qr-barcode-scanner";
 
-function ScanDni() {
-  const [data, setData] = React.useState("Not Found");
-  const [isScanning, setIsScanning] = React.useState(true); // Control del estado de escaneo
+function DniScanner() {
+  const [scannedData, setScannedData] = useState("");
+  const [parsedData, setParsedData] = useState(null);
+
+  // Validar formato del escaneo
+  const validateAndParse = (rawData) => {
+    const parts = rawData.split("@");
+    if (parts.length !== 9) return null;
+
+    const [
+      tramiteNumber,
+      lastName,
+      firstName,
+      gender,
+      dniNumber,
+      ejemplar,
+      birthDate,
+      issueDate,
+      cuil,
+    ] = parts;
+
+    // Validar fechas
+    const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+    if (!dateRegex.test(birthDate) || !dateRegex.test(issueDate)) return null;
+
+    // Validar número de DNI
+    if (!/^\d+$/.test(dniNumber)) return null;
+
+    // Validar género
+    if (!["M", "F"].includes(gender)) return null;
+
+    return {
+      tramiteNumber,
+      lastName,
+      firstName,
+      gender,
+      dniNumber,
+      ejemplar,
+      birthDate,
+      issueDate,
+      cuil,
+    };
+  };
+
+  const handleScan = (err, result) => {
+    if (result) {
+      const rawData = result.text;
+      setScannedData(rawData);
+
+      const parsed = validateAndParse(rawData);
+      if (parsed) {
+        setParsedData(parsed);
+      } else {
+        setParsedData(null);
+        alert("Formato de escaneo inválido.");
+      }
+    } else {
+      setScannedData("No se encontró ningún código.");
+    }
+  };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-      <h1 className="text-2xl font-bold mb-4">Escanear Código QR o de Barra</h1>
-      
-      {/* Contenedor para el escáner con un borde indicativo */}
-      <div className="relative">
-        <div
-          className="absolute top-0 left-0 w-full h-full border-4 border-dashed border-blue-500"
-          style={{ zIndex: 1 }}
-        ></div>
-        
-        {isScanning && (
-          <BarcodeScannerComponent
-            width={500}
-            height={500}
-            onUpdate={(err, result) => {
-              if (result) {
-                setData(result.text);
-                setIsScanning(false); // Detener escaneo al obtener datos
-              } else {
-                setData("Not Found");
-              }
-            }}
-          />
-        )}
-      </div>
-
-      {/* Mensaje al finalizar lectura */}
-      {data !== "Not Found" && (
-        <div className="mt-4 bg-green-100 border border-green-400 text-green-700 p-4 rounded">
-          <h2 className="text-xl font-bold mb-2">¡Lectura Exitosa!</h2>
-          <p>{data}</p>
+    <div style={{ textAlign: "center", padding: "20px" }}>
+      <BarcodeScannerComponent width={500} height={500} onUpdate={handleScan} />
+      <h2>Resultado del escaneo:</h2>
+      <p>{scannedData}</p>
+      {parsedData ? (
+        <div>
+          <h3>Datos Procesados:</h3>
+          <ul>
+            <li><strong>Número de Trámite:</strong> {parsedData.tramiteNumber}</li>
+            <li><strong>Apellidos:</strong> {parsedData.lastName}</li>
+            <li><strong>Nombres:</strong> {parsedData.firstName}</li>
+            <li><strong>Sexo:</strong> {parsedData.gender}</li>
+            <li><strong>DNI:</strong> {parsedData.dniNumber}</li>
+            <li><strong>Ejemplar:</strong> {parsedData.ejemplar}</li>
+            <li><strong>Fecha de Nacimiento:</strong> {parsedData.birthDate}</li>
+            <li><strong>Fecha de Emisión:</strong> {parsedData.issueDate}</li>
+            <li><strong>CUIL:</strong> {parsedData.cuil}</li>
+          </ul>
         </div>
-      )}
-
-      {/* Botón para reactivar el escáner */}
-      {!isScanning && (
-        <button
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
-          onClick={() => setIsScanning(true)}
-        >
-          Escanear Otro Código
-        </button>
+      ) : (
+        <p>No se pudo procesar el escaneo correctamente.</p>
       )}
     </div>
   );
 }
 
-export default ScanDni;
+export default DniScanner;
