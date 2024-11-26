@@ -32,7 +32,7 @@ function ScanDni() {
   const [selectedDeviceId, setSelectedDeviceId] = useState(
     localStorage.getItem("selectedCamera") || null
   );
-  const [rearCameras, setRearCameras] = useState([]);
+  const [cameras, setCameras] = useState([]);
   const [scannedData, setScannedData] = useState("");
   const [parsedData, setParsedData] = useState(null);
   const [error, setError] = useState(null);
@@ -43,16 +43,11 @@ function ScanDni() {
       .enumerateDevices()
       .then((devices) => {
         const videoInputs = devices.filter((device) => device.kind === "videoinput");
-        const backCameras = videoInputs.filter(
-          (device) =>
-            device.label.toLowerCase().includes("back") ||
-            device.label.toLowerCase().includes("rear")
-        );
+        
+        setCameras(videoInputs); // Listar todas las cámaras disponibles
 
-        setRearCameras(backCameras);
-
-        if (!selectedDeviceId && backCameras.length > 0) {
-          const defaultCameraId = backCameras[0].deviceId;
+        if (!selectedDeviceId && videoInputs.length > 0) {
+          const defaultCameraId = videoInputs[0].deviceId;
           setSelectedDeviceId(defaultCameraId);
           localStorage.setItem("selectedCamera", defaultCameraId);
         }
@@ -139,9 +134,9 @@ function ScanDni() {
     <div style={{ textAlign: "center", padding: "20px" }}>
       <h2>Escanear y Procesar DNI</h2>
       <div>
-        <h4>Selecciona una cámara trasera:</h4>
-        {rearCameras.length > 0 ? (
-          rearCameras.map((camera, index) => (
+        <h4>Selecciona una cámara:</h4>
+        {cameras.length > 0 ? (
+          cameras.map((camera, index) => (
             <button
               key={camera.deviceId}
               onClick={() => handleCameraSelect(camera.deviceId)}
@@ -159,7 +154,7 @@ function ScanDni() {
             </button>
           ))
         ) : (
-          <p>No se encontraron cámaras traseras.</p>
+          <p>No se encontraron cámaras.</p>
         )}
       </div>
       {selectedDeviceId ? (
