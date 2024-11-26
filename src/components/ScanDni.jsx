@@ -5,22 +5,21 @@ function DniScanner() {
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
   const [scannedData, setScannedData] = useState("");
 
-  // Obtener las cámaras disponibles y configurar automáticamente la cámara trasera
   useEffect(() => {
     navigator.mediaDevices.enumerateDevices().then((devices) => {
       const videoInputs = devices.filter((device) => device.kind === "videoinput");
 
-      // Buscar cámara trasera por label o usar la última cámara
+      // Buscar la cámara trasera o usar la primera disponible
       const backCamera =
         videoInputs.find((device) =>
           device.label.toLowerCase().includes("back") || device.label.toLowerCase().includes("rear")
-        ) || videoInputs[videoInputs.length ]; // Usar última cámara como fallback
+        ) || videoInputs[0]; // Usar la primera como fallback
 
       if (backCamera) {
         setSelectedDeviceId(backCamera.deviceId);
-      } else if (videoInputs.length > 0) {
-        setSelectedDeviceId(videoInputs[0].deviceId); // Usar la primera si no hay más opciones
       }
+    }).catch((error) => {
+      console.error("Error al enumerar dispositivos:", error);
     });
   }, []);
 
@@ -28,23 +27,27 @@ function DniScanner() {
     if (result) {
       setScannedData(result.text);
     } else if (err) {
-      console.error(err);
+      console.error("Error al escanear:", err);
     }
   };
 
   return (
     <div style={{ textAlign: "center", padding: "20px" }}>
       <h2>Escanear DNI</h2>
-      <BarcodeScannerComponent
-        width={500}
-        height={300}
-        onUpdate={handleScan}
-        videoConstraints={{
-          deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined,
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-        }}
-      />
+      {selectedDeviceId ? (
+        <BarcodeScannerComponent
+          width={500}
+          height={500}
+          onUpdate={handleScan}
+          videoConstraints={{
+            deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined,
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+          }}
+        />
+      ) : (
+        <p>Cargando cámaras...</p>
+      )}
       <h2>Resultado del escaneo:</h2>
       <p>{scannedData || "Aún no se ha escaneado ningún código."}</p>
     </div>
