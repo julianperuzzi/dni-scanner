@@ -73,7 +73,10 @@ function ScanDni() {
         ejemplar: fields[5],
         fechaNacimiento: validateDate(fields[6]),
         fechaEmision: validateDate(fields[7]),
-        cuil: fields[8]?.slice(0, 2) && fields[8]?.slice(-1) ? fields[8] : null, // Verificar CUIL en el campo 8
+        cuil: fields[8]? {  // Verificar si el campo 8 tiene datos
+          inicio: fields[8].slice(0, 2) || null,  // Tomar los primeros 2 caracteres
+          fin: fields[8].slice(-1) || null,       // Tomar el último carácter
+        } : null,
       };
 
       validateParsedData(parsed);
@@ -174,7 +177,11 @@ function ScanDni() {
               <li><strong>Ejemplar:</strong> {parsedData.ejemplar}</li>
               <li><strong>Fecha de Nacimiento:</strong> {parsedData.fechaNacimiento}</li>
               <li><strong>Fecha de Emisión:</strong> {parsedData.fechaEmision}</li>
-              {parsedData.cuil && <li><strong>CUIL:</strong> {parsedData.cuil}</li>}
+              {parsedData.cuil && parsedData.cuil.inicio && parsedData.cuil.fin ? (
+          <li>
+            <strong>CUIL:</strong> {parsedData.cuil.inicio}-{parsedData.numeroDni}-{parsedData.cuil.fin}
+          </li>
+        ) : null}
             </ul>
             <button onClick={handleSave} style={{ marginTop: "10px" }}>Guardar</button>
             <button onClick={handleCancel} style={{ marginLeft: "10px" }}>Cancelar</button>
