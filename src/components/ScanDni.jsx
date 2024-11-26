@@ -3,7 +3,6 @@ import BarcodeScannerComponent from "react-qr-barcode-scanner";
 import { useUser } from '../context/UserContext';
 import { supabase } from '../supabaseClient';
 
-
 function ScanDni() {
   const [selectedDeviceId, setSelectedDeviceId] = useState(
     localStorage.getItem("selectedCamera") || null
@@ -13,17 +12,29 @@ function ScanDni() {
   const [parsedData, setParsedData] = useState(null);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  const { user } = useUser(); // Obtén el usuario actual del contexto
+  const { user, setUser } = useUser(); // Verificar y actualizar el estado del usuario
 
+  useEffect(() => {
+    // Verificar sesión al cargar
+    const checkSession = async () => {
+      const { data: session, error } = await supabase.auth.getSession();
+      if (session?.session?.user) {
+        setUser(session.session.user);
+      } else if (error) {
+        console.error("Error al recuperar la sesión:", error);
+      }
+    };
+    checkSession();
+  }, [setUser]);
 
   useEffect(() => {
     navigator.mediaDevices
       .enumerateDevices()
       .then((devices) => {
         const videoInputs = devices.filter((device) => device.kind === "videoinput");
-        
-        setCameras(videoInputs); // Listar todas las cámaras disponibles
+        setCameras(videoInputs);
 
         if (!selectedDeviceId && videoInputs.length > 0) {
           const defaultCameraId = videoInputs[0].deviceId;
@@ -36,19 +47,8 @@ function ScanDni() {
       });
   }, [selectedDeviceId]);
 
-  useEffect(() => {
-    // Intentar obtener acceso a la cámara
-    navigator.mediaDevices
-      .getUserMedia({ video: true })
-      .then((stream) => { 
-        console.log("Acceso a la cámara concedido");
-      })
-      .catch((error) => {
-        console.error("Error al acceder a la cámara:", error);
-      });
-  }, []);
-
-  const handleCameraSelect = (deviceId) => {
+  const handleCameraSelect = (event) => {
+    const deviceId = event.target.value;
     setSelectedDeviceId(deviceId);
     localStorage.setItem("selectedCamera", deviceId);
   };
@@ -56,7 +56,7 @@ function ScanDni() {
   const handleScan = (err, result) => {
     if (result) {
       setScannedData(result.text);
-      parsePdf417(result.text); // Procesar el resultado escaneado
+      parsePdf417(result.text);
     } else if (err) {
       console.error("Error al escanear:", err);
     }
@@ -79,17 +79,13 @@ function ScanDni() {
         ejemplar: fields[5],
         fechaNacimiento: validateDate(fields[6]),
         fechaEmision: validateDate(fields[7]),
-        cuil: fields[8]? {  // Verificar si el campo 8 tiene datos
-          inicio: fields[8].slice(0, 2) || null,  // Tomar los primeros 2 caracteres
-          fin: fields[8].slice(-1) || null,       // Tomar el último carácter
-        } : null,
       };
 
       validateParsedData(parsed);
 
       setParsedData(parsed);
       setError(null);
-      setShowModal(true); // Mostrar modal cuando se ha parseado correctamente
+      setShowModal(true);
     } catch (err) {
       setParsedData(null);
       setError(err.message);
@@ -130,9 +126,8 @@ function ScanDni() {
     }
 
     try {
-      // Inserta los datos en la tabla con el user_id
       const { data, error } = await supabase.from("dni_data").insert([{
-        user_id: user.id, // Aquí usamos el ID del usuario desde el contexto
+        user_id: user.id,
         document_number: parsedData.numeroTramite,
         last_name: parsedData.apellidos,
         first_name: parsedData.nombres,
@@ -141,18 +136,14 @@ function ScanDni() {
         document_type: parsedData.ejemplar,
         birth_date: formatToISO(parsedData.fechaNacimiento),
         issue_date: formatToISO(parsedData.fechaEmision),
-        cuil_start: parsedData.cuil?.inicio || null,
-        cuil_end: parsedData.cuil?.fin || null,
-        cuil_full: parsedData.cuil
-          ? `${parsedData.cuil.inicio}-${parsedData.numeroDni}-${parsedData.cuil.fin}`
-          : null,
       }]);
 
       if (error) {
         throw error;
       }
 
-      console.log("Datos guardados correctamente:", data);
+      setShowModal(false);
+      setShowSuccessModal(true); // Mostrar modal de éxito
     } catch (err) {
       console.error("Error al guardar los datos en la base de datos:", err.message);
     }
@@ -168,32 +159,18 @@ function ScanDni() {
       <h2>Escanear y Procesar DNI</h2>
       <div>
         <h4>Selecciona una cámara:</h4>
-        {cameras.length > 0 ? (
-          cameras.map((camera, index) => (
-            <button
-              key={camera.deviceId}
-              onClick={() => handleCameraSelect(camera.deviceId)}
-              style={{
-                margin: "5px",
-                padding: "10px",
-                backgroundColor: selectedDeviceId === camera.deviceId ? "green" : "gray",
-                color: "white",
-                border: "none",
-                borderRadius: "5px",
-                cursor: "pointer",
-              }}
-            >
-              {camera.label || `Cámara ${index + 1}`}
-            </button>
-          ))
-        ) : (
-          <p>No se encontraron cámaras.</p>
-        )}
+        <select onChange={handleCameraSelect} value={selectedDeviceId}>
+          {cameras.map((camera) => (
+            <option key={camera.deviceId} value={camera.deviceId}>
+              {camera.label || "Cámara sin etiqueta"}
+            </option>
+          ))}
+        </select>
       </div>
       {selectedDeviceId ? (
         <BarcodeScannerComponent
-          width={500}
-          height={200}
+          width={600}
+          height={400}
           onUpdate={handleScan}
           videoConstraints={{
             deviceId: { exact: selectedDeviceId },
@@ -206,31 +183,30 @@ function ScanDni() {
       )}
       <h2>Resultado del escaneo:</h2>
       <p>{scannedData || "Aún no se ha escaneado ningún código."}</p>
-
       {error && <p style={{ color: "red" }}>{error}</p>}
 
       {parsedData && showModal && (
-        <div className="modal" style={{ display: "block", backgroundColor: "rgba(0,0,0,0.7)", padding: "20px" }}>
-          <div style={{ backgroundColor: "white", padding: "20px", borderRadius: "8px" }}>
+        <div className="modal">
+          <div>
             <h3>Datos Parseados:</h3>
-            <ul style={{ textAlign: "left", display: "inline-block" }}>
+            <ul>
               <li><strong>Número de Trámite:</strong> {parsedData.numeroTramite}</li>
               <li><strong>Apellidos:</strong> {parsedData.apellidos}</li>
               <li><strong>Nombres:</strong> {parsedData.nombres}</li>
               <li><strong>Sexo:</strong> {parsedData.sexo}</li>
-              <li><strong>Número de DNI:</strong> {parsedData.numeroDni}</li>
-              <li><strong>Ejemplar:</strong> {parsedData.ejemplar}</li>
+              <li><strong>DNI:</strong> {parsedData.numeroDni}</li>
               <li><strong>Fecha de Nacimiento:</strong> {parsedData.fechaNacimiento}</li>
-              <li><strong>Fecha de Emisión:</strong> {parsedData.fechaEmision}</li>
-              {parsedData.cuil && parsedData.cuil.inicio && parsedData.cuil.fin ? (
-          <li>
-            <strong>CUIL:</strong> {parsedData.cuil.inicio}-{parsedData.numeroDni}-{parsedData.cuil.fin}
-          </li>
-        ) : null}
             </ul>
-            <button onClick={handleSave} style={{ marginTop: "10px" }}>Guardar Datos</button>
-            <button onClick={handleCancel} style={{ marginLeft: "10px" }}>Cancelar</button>
+            <button onClick={handleSave}>Guardar Datos</button>
+            <button onClick={handleCancel}>Cancelar</button>
           </div>
+        </div>
+      )}
+
+      {showSuccessModal && (
+        <div className="success-modal">
+          <p>¡Datos guardados correctamente!</p>
+          <button onClick={() => setShowSuccessModal(false)}>Cerrar</button>
         </div>
       )}
     </div>
