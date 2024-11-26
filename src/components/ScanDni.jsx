@@ -6,13 +6,15 @@ function DniScanner() {
   const [videoDevices, setVideoDevices] = useState([]);
   const [scannedData, setScannedData] = useState("");
 
-  // Obtener las cámaras disponibles
+  // Obtener las cámaras disponibles y configurar la cámara 0 como predeterminada
   useEffect(() => {
     navigator.mediaDevices.enumerateDevices().then((devices) => {
       const videoInputs = devices.filter((device) => device.kind === "videoinput");
       setVideoDevices(videoInputs);
+
+      // Establecer la cámara 0 como predeterminada si hay dispositivos disponibles
       if (videoInputs.length > 0) {
-        setSelectedDeviceId(videoInputs[0].deviceId); // Seleccionar la primera cámara por defecto
+        setSelectedDeviceId(videoInputs[0].deviceId);
       }
     });
   }, []);
