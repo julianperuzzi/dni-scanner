@@ -108,14 +108,47 @@ function ScanDni() {
     }
   };
 
-  const handleSave = () => {
-    // Aquí podrías agregar la lógica para guardar los datos en la base de datos
-    console.log("Datos guardados:", parsedData);
+  const handleCancel = () => {
     setShowModal(false);
   };
 
-  const handleCancel = () => {
-    setShowModal(false);
+  const handleSave = async () => {
+    if (!parsedData) {
+      console.error("No hay datos para guardar.");
+      return;
+    }
+ 
+    try {
+      const { data, error } = await supabase.from('dni_data').insert([{
+        document_number: parsedData.numeroTramite,
+        last_name: parsedData.apellidos,
+        first_name: parsedData.nombres,
+        gender: parsedData.sexo,
+        dni_number: parsedData.numeroDni,
+        document_type: parsedData.ejemplar,
+        birth_date: formatToISO(parsedData.fechaNacimiento),
+        issue_date: formatToISO(parsedData.fechaEmision),
+        cuil_start: parsedData.cuil?.inicio || null,
+        cuil_end: parsedData.cuil?.fin || null,
+        cuil_full: parsedData.cuil
+          ? `${parsedData.cuil.inicio}-${parsedData.numeroDni}-${parsedData.cuil.fin}`
+          : null,
+      }]);
+
+      if (error) {
+        throw error;
+      }
+
+      console.log("Datos guardados correctamente:", data);
+      setShowModal(false); // Cerrar el modal tras guardar
+    } catch (err) {
+      console.error("Error al guardar los datos en la base de datos:", err.message);
+    }
+  };
+
+  const formatToISO = (date) => {
+    const [day, month, year] = date.split("/");
+    return `${year}-${month}-${day}`;
   };
 
   return (
