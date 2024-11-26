@@ -40,7 +40,10 @@ function ScanDni() {
 
   useEffect(() => {
     navigator.mediaDevices
+      .getUserMedia({ video: true })
+
       .enumerateDevices()
+      
       .then((devices) => {
         const videoInputs = devices.filter((device) => device.kind === "videoinput");
         
