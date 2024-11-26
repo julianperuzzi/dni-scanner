@@ -3,72 +3,30 @@ import BarcodeScannerComponent from "react-qr-barcode-scanner";
 
 // Función para calcular el CUIL basado en el DNI y el sexo
 const calculateCuil = (dni, gender) => {
-  // Primero, limpiamos el DNI de caracteres no numéricos
-  const cleanedDni = dni.replace(/\D/g, '');
+  let type = gender === "M" ? "20" : "27"; // Hombres: 20, Mujeres: 27
+  const dniDigits = dni.toString().padStart(8, "0"); // Asegurarse de que el DNI tenga 8 dígitos
+  
+  // Se usan los multiplicadores de la fórmula del CUIL
+  const multipliers = [5, 4, 3, 2, 7, 6, 5, 4]; // Los multiplicadores corresponden a la posición en el DNI
+  const dniArray = dniDigits.split("").map(Number); // Convertir el DNI a un array de números
+  
+  // Realizar las multiplicaciones y la suma
+  const sum = multipliers.reduce((acc, mul, index) => acc + dniArray[index] * mul, 0);
 
-  // Verificamos si el DNI es válido (debe ser entre 7 y 8 dígitos)
-  if (cleanedDni.length < 7 || cleanedDni.length > 8) {
-      throw new Error("¡DNI inválido! Debe estar entre 7 y 8 dígitos.");
+  // Calcular el dígito de verificación
+  const remainder = sum % 11;
+  let checkDigit = 11 - remainder;
+
+  if (remainder === 1) {
+    checkDigit = gender === "M" ? 9 : 4; // Si el resto es 1, el dígito varía según el sexo
+    type = "23"; // Cambiar tipo a 23 si el resto es 1
+  } else if (remainder === 0) {
+    checkDigit = 0; // Si el resto es 0, el dígito es 0
   }
 
-  // Si el DNI tiene 7 dígitos, lo completamos con un cero adelante
-  const formattedDni = cleanedDni.length === 7 ? `0${cleanedDni}` : cleanedDni;
-
-  // Asignamos el valor de SEXO dependiendo del sexo ingresado
-  let tipoSexo;
-  switch (gender.toUpperCase()) {
-      case 'M':
-          tipoSexo = 20;
-          break;
-      case 'F':
-          tipoSexo = 27;
-          break;
-      case 'E':
-          tipoSexo = 30;
-          break;
-      default:
-          throw new Error("Sexo inválido. Debe ser 'M', 'F' o 'E'.");
-  }
-
-  // Generamos la secuencia de 10 dígitos
-  const parcial = `${tipoSexo}${formattedDni}`;
-
-  // Secuencia para calcular el verificador
-  const secuencia = '2345672345';
-
-  let acumulado = 0;
-  for (let i = 0; i < parcial.length; i++) {
-      acumulado += parseInt(parcial.charAt(i)) * parseInt(secuencia.charAt(i));
-  }
-
-  // Calculamos el dígito verificador
-  let verificador = 11 - (acumulado % 11);
-
-  // Verificamos si el dígito verificador es 10 o 11 y ajustamos
-  if (verificador === 10) {
-      if (tipoSexo === 20 || tipoSexo === 27) {
-          verificador = 23;
-      } else if (tipoSexo === 30) {
-          verificador = 33;
-      }
-  } else if (verificador === 11) {
-      verificador = 0;
-  }
-
-  // Devolvemos el CUIL completo en el formato adecuado
-  return `${tipoSexo}-${formattedDni}-${verificador}`;
+  // Retornar el CUIL con el formato correcto
+  return `${type}-${dniDigits}-${checkDigit}`;
 };
-
-// Ejemplo de uso:
-try {
-  const dni = '12345678';  // DNI de ejemplo
-  const sexo = 'M';        // Sexo de la persona (M/F/E)
-  const cuil = calculateCuil(dni, sexo);
-  console.log(`El CUIL/CUIT calculado es: ${cuil}`);
-} catch (error) {
-  console.error(error.message);
-}
-
 
 function ScanDni() {
   const [selectedDeviceId, setSelectedDeviceId] = useState(
@@ -102,20 +60,15 @@ function ScanDni() {
   }, [selectedDeviceId]);
 
   useEffect(() => {
-    // Intentar obtener acceso a la cámara
-    navigator.mediaDevices
-      .getUserMedia({ video: true })
-      .then((stream) => {
-        // Si se obtiene acceso, se puede utilizar la cámara
-        console.log("Acceso a la cámara concedido");
-      })
-      .catch((error) => {
-        // Si ocurre un error (por ejemplo, permisos denegados), manejarlo aquí
-        console.error("Error al acceder a la cámara: ", error);
-        alert("No se pudo acceder a la cámara. Asegúrate de que los permisos estén habilitados.");
-      });
-  }, []);
-  
+  // Intentar obtener acceso a la cámara
+  navigator.mediaDevices
+    .getUserMedia({ video: true })
+    .then((stream) => { 
+      console.log("Acceso a la cámara concedido");
+    })
+
+}, []);
+
 
   const handleCameraSelect = (deviceId) => {
     setSelectedDeviceId(deviceId);
