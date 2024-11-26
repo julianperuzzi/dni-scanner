@@ -40,7 +40,6 @@ function ScanDni() {
 
   useEffect(() => {
     navigator.mediaDevices
-      .getUserMedia({ video: true })
 
       .enumerateDevices()
       
@@ -59,6 +58,22 @@ function ScanDni() {
         console.error("Error al enumerar dispositivos:", error);
       });
   }, [selectedDeviceId]);
+
+  useEffect(() => {
+    // Intentar obtener acceso a la cámara
+    navigator.mediaDevices
+      .getUserMedia({ video: true })
+      .then((stream) => {
+        // Si se obtiene acceso, se puede utilizar la cámara
+        console.log("Acceso a la cámara concedido");
+      })
+      .catch((error) => {
+        // Si ocurre un error (por ejemplo, permisos denegados), manejarlo aquí
+        console.error("Error al acceder a la cámara: ", error);
+        alert("No se pudo acceder a la cámara. Asegúrate de que los permisos estén habilitados.");
+      });
+  }, []);
+  
 
   const handleCameraSelect = (deviceId) => {
     setSelectedDeviceId(deviceId);
