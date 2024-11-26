@@ -37,7 +37,7 @@ function DniScanner() {
       <h2>Escanear DNI</h2>
       <BarcodeScannerComponent
         width={500}
-        height={500}
+        height={300}
         onUpdate={handleScan}
         videoConstraints={{
           deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined,
