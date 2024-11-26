@@ -228,7 +228,7 @@ function ScanDni() {
           </li>
         ) : null}
             </ul>
-            <button onClick={handleSave} style={{ marginTop: "10px" }}>Guardar</button>
+            <button onClick={handleSave} style={{ marginTop: "10px" }}>Guardar Datos</button>
             <button onClick={handleCancel} style={{ marginLeft: "10px" }}>Cancelar</button>
           </div>
         </div>
