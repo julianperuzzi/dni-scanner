@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import BarcodeScannerComponent from "react-qr-barcode-scanner";
-import supabase from "../supabaseClient"; // Importar el cliente configurado
-import { useUser } from '../context/UserContext'; // Importa tu hook personalizado
+import supabase from "../supabaseClient";
+import { useUser } from "../context/UserContext"; 
 
 
 function ScanDni() {
