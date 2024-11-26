@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import BarcodeScannerComponent from "react-qr-barcode-scanner";
 import supabase from "./supabaseClient"; // Importar el cliente configurado
+import { useUser } from './context/UserContext'; // Importa tu hook personalizado
 
 
 function ScanDni() {
@@ -12,6 +13,9 @@ function ScanDni() {
   const [parsedData, setParsedData] = useState(null);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
+
+  const { user } = useUser(); // Obtén el usuario actual del contexto
+
 
   useEffect(() => {
     navigator.mediaDevices
@@ -119,9 +123,16 @@ function ScanDni() {
       console.error("No hay datos para guardar.");
       return;
     }
- 
+
+    if (!user || !user.id) {
+      console.error("El usuario no está autenticado.");
+      return;
+    }
+
     try {
-      const { data, error } = await supabase.from('dni_data').insert([{
+      // Inserta los datos en la tabla con el user_id
+      const { data, error } = await supabase.from("dni_data").insert([{
+        user_id: user.id, // Aquí usamos el ID del usuario desde el contexto
         document_number: parsedData.numeroTramite,
         last_name: parsedData.apellidos,
         first_name: parsedData.nombres,
@@ -142,7 +153,6 @@ function ScanDni() {
       }
 
       console.log("Datos guardados correctamente:", data);
-      setShowModal(false); // Cerrar el modal tras guardar
     } catch (err) {
       console.error("Error al guardar los datos en la base de datos:", err.message);
     }
