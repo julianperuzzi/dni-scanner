@@ -135,7 +135,7 @@ function ScanDni() {
       {selectedDeviceId ? (
         <BarcodeScannerComponent
           width={500}
-          height={500}
+          height={200}
           onUpdate={handleScan}
           videoConstraints={{
             deviceId: { exact: selectedDeviceId },
