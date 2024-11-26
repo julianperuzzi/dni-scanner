@@ -2,91 +2,71 @@ import React, { useState, useEffect } from "react";
 import BarcodeScannerComponent from "react-qr-barcode-scanner";
 
 // Función para calcular el CUIL basado en el DNI y el sexo
-// Factores para el cálculo del dígito verificador
-const factores = "5432765432";
+const calculateCuil = (dni, gender) => {
+  // Primero, limpiamos el DNI de caracteres no numéricos
+  const cleanedDni = dni.replace(/\D/g, '');
 
-// Función para convertir una cadena en una matriz de números
-const cadenaANumeros = (cadena) => cadena.split("").map((c) => parseInt(c));
-
-// Función para agregar ceros a la izquierda a una cadena hasta alcanzar la longitud deseada
-const agregarCerosIzquierda = (cadena, longitud = 8, caracterCero = "0") => {
-  const diferencia = longitud - cadena.length;
-  return diferencia <= 0 ? cadena : `${caracterCero.repeat(diferencia)}${cadena}`;
-};
-
-// Función para combinar dos matrices en una matriz de pares
-const combinarMatrices = (matriz1, matriz2) => {
-  let i, indice, len1, n, resultado;
-  resultado = [];
-  for (indice = i = 0, len1 = matriz1.length; i < len1; indice = ++i) {
-    n = matriz1[indice];
-    resultado.push([n, matriz2[indice]]);
-  }
-  return resultado;
-};
-
-// Función principal para calcular el CUIL
-function calcularCUIL(tipoDocumento, numeroDocumento) {
-  // Verificar si el tipo de documento es válido
-  if (!tipoDocumento || !["M", "F", "E"].includes(tipoDocumento)) {
-    return null;
+  // Verificamos si el DNI es válido (debe ser entre 7 y 8 dígitos)
+  if (cleanedDni.length < 7 || cleanedDni.length > 8) {
+      throw new Error("¡DNI inválido! Debe estar entre 7 y 8 dígitos.");
   }
 
-  // Convertir a mayúsculas el tipo de documento
-  tipoDocumento = tipoDocumento.toUpperCase();
+  // Si el DNI tiene 7 dígitos, lo completamos con un cero adelante
+  const formattedDni = cleanedDni.length === 7 ? `0${cleanedDni}` : cleanedDni;
 
-  // Verificar si el número de documento es un número válido
-  if (typeof numeroDocumento !== "number" || isNaN(numeroDocumento)) {
-    return null;
-  }
-
-  // Pad del número de documento con ceros a la izquierda
-  const numeroDocumentoPad = agregarCerosIzquierda(numeroDocumento.toString());
-
-  // Determinar el prefijo según el tipo de documento
-  let prefijo = tipoDocumento === "M" ? "20" : tipoDocumento === "F" ? "27" : "30";
-
-  // Crear la cadena con prefijo y número de documento
-  const cadenaCompleta = `${prefijo}${numeroDocumentoPad}`;
-
-  // Combinar los factores con los dígitos de la cadena completa
-  const combinacion = combinarMatrices(cadenaANumeros(factores), cadenaANumeros(cadenaCompleta));
-
-  // Calcular los productos de las combinaciones
-  const productos = combinacion.map((par) => par[0] * par[1]);
-
-  // Calcular la suma de los productos
-  const suma = productos.reduce((acumulado, producto) => acumulado + producto, 0);
-
-  // Calcular el resto de la suma dividido por 11
-  const resto = suma % 11;
-
-  // Variable para almacenar el dígito verificador
-  let digitoVerificador;
-
-  // Determinar el dígito verificador según el tipo de documento
-  if (tipoDocumento === "E") {
-    // Para extranjeros, el dígito verificador es 11 menos el resto
-    digitoVerificador = (11 - resto).toString();
-  } else {
-    // Para argentinos, el cálculo del dígito verificador es más complejo
-    switch (resto) {
-      case 0:
-        digitoVerificador = "0";
-        break;
-      case 1:
-        prefijo = "23";
-        if (tipoDocumento === "F") digitoVerificador = "4";
-        if (tipoDocumento === "M") digitoVerificador = "9";
-        break;
+  // Asignamos el valor de SEXO dependiendo del sexo ingresado
+  let tipoSexo;
+  switch (gender.toUpperCase()) {
+      case 'M':
+          tipoSexo = 20;
+          break;
+      case 'F':
+          tipoSexo = 27;
+          break;
+      case 'E':
+          tipoSexo = 30;
+          break;
       default:
-        // El dígito verificador es 11 menos el resto
-        digitoVerificador = (11 - resto).toString();
-    }
+          throw new Error("Sexo inválido. Debe ser 'M', 'F' o 'E'.");
   }
 
-  // Devolver el CUIL formateado
-  return `${prefijo}-${numeroDocumentoPad}-${digitoVerificador}`;
+  // Generamos la secuencia de 10 dígitos
+  const parcial = `${tipoSexo}${formattedDni}`;
+
+  // Secuencia para calcular el verificador
+  const secuencia = '2345672345';
+
+  let acumulado = 0;
+  for (let i = 0; i < parcial.length; i++) {
+      acumulado += parseInt(parcial.charAt(i)) * parseInt(secuencia.charAt(i));
+  }
+
+  // Calculamos el dígito verificador
+  let verificador = 11 - (acumulado % 11);
+
+  // Verificamos si el dígito verificador es 10 o 11 y ajustamos
+  if (verificador === 10) {
+      if (tipoSexo === 20 || tipoSexo === 27) {
+          verificador = 23;
+      } else if (tipoSexo === 30) {
+          verificador = 33;
+      }
+  } else if (verificador === 11) {
+      verificador = 0;
+  }
+
+  // Devolvemos el CUIL completo en el formato adecuado
+  return `${tipoSexo}-${formattedDni}-${verificador}`;
+};
+
+// Ejemplo de uso:
+try {
+  const dni = '12345678';  // DNI de ejemplo
+  const sexo = 'M';        // Sexo de la persona (M/F/E)
+  const cuil = calculateCuil(dni, sexo);
+  console.log(`El CUIL/CUIT calculado es: ${cuil}`);
+} catch (error) {
+  console.error(error.message);
 }
 
 
