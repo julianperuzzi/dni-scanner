@@ -1,6 +1,30 @@
 import React, { useState, useEffect } from "react";
 import BarcodeScannerComponent from "react-qr-barcode-scanner";
 
+// Función para calcular el CUIL basado en el DNI y el sexo
+const calculateCuil = (dni, gender) => {
+  let type = gender === "M" ? "20" : "27"; // Hombres: 20, Mujeres: 27
+  const dniDigits = dni.toString().padStart(8, "0"); // Asegurarse de que el DNI tenga 8 dígitos
+  const dniArray = dniDigits.split("").map(Number);
+  
+  // Realizar las multiplicaciones
+  const multipliers = [2, 3, 4, 5, 6, 7, 8, 9];
+  const sum = multipliers.reduce((acc, mul, index) => acc + dniArray[index] * mul, 0);
+
+  // Calcular el dígito de verificación
+  const remainder = sum % 11;
+  let checkDigit = 11 - remainder;
+  if (remainder === 1) {
+    checkDigit = gender === "M" ? 9 : 4;
+    type = "23"; // Cambiar el tipo a 23 si el resto es 1
+  } else if (remainder === 0) {
+    checkDigit = 0;
+  }
+
+  // Retornar el CUIL
+  return `${type}${dniDigits}-${checkDigit}`;
+};
+
 function ScanDni() {
   const [selectedDeviceId, setSelectedDeviceId] = useState(
     localStorage.getItem("selectedCamera") || null
@@ -9,8 +33,8 @@ function ScanDni() {
   const [scannedData, setScannedData] = useState("");
   const [parsedData, setParsedData] = useState(null);
   const [error, setError] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
-  // Obtener las cámaras traseras
   useEffect(() => {
     navigator.mediaDevices
       .enumerateDevices()
@@ -24,7 +48,6 @@ function ScanDni() {
 
         setRearCameras(backCameras);
 
-        // Si no hay una cámara seleccionada en localStorage, seleccionar la primera cámara trasera disponible
         if (!selectedDeviceId && backCameras.length > 0) {
           const defaultCameraId = backCameras[0].deviceId;
           setSelectedDeviceId(defaultCameraId);
@@ -52,14 +75,12 @@ function ScanDni() {
 
   const parsePdf417 = (code) => {
     try {
-      // Separar los campos por el delimitador "@"
       const fields = code.split("@");
 
-      if (fields.length < 9) {
+      if (fields.length < 8) {
         throw new Error("Código incompleto. Verifica el escaneo.");
       }
 
-      // Mapear los datos
       const parsed = {
         numeroTramite: fields[0],
         apellidos: correctSpecialChars(fields[1]),
@@ -69,18 +90,14 @@ function ScanDni() {
         ejemplar: fields[5],
         fechaNacimiento: validateDate(fields[6]),
         fechaEmision: validateDate(fields[7]),
-        cuil: {
-          inicio: fields[8]?.slice(0, 2) || null,
-          fin: fields[8]?.slice(-1) || null,
-        },
+        cuil: fields[8] ? fields[8] : calculateCuil(fields[4], fields[3]),
       };
 
-      // Validar campos clave
       validateParsedData(parsed);
 
-      // Si todo está correcto, actualizar estado
       setParsedData(parsed);
       setError(null);
+      setShowModal(true); // Mostrar modal cuando se ha parseado correctamente
     } catch (err) {
       setParsedData(null);
       setError(err.message);
@@ -103,6 +120,16 @@ function ScanDni() {
     if (!data.numeroDni || !data.apellidos || !data.nombres) {
       throw new Error("Faltan datos clave: DNI, apellidos o nombres.");
     }
+  };
+
+  const handleSave = () => {
+    // Aquí podrías agregar la lógica para guardar los datos en la base de datos
+    console.log("Datos guardados:", parsedData);
+    setShowModal(false);
+  };
+
+  const handleCancel = () => {
+    setShowModal(false);
   };
 
   return (
@@ -151,20 +178,28 @@ function ScanDni() {
 
       {error && <p style={{ color: "red" }}>{error}</p>}
 
-      {parsedData && (
-        <div style={{ marginTop: "20px" }}>
-          <h3>Datos Parseados:</h3>
-          <ul style={{ textAlign: "left", display: "inline-block" }}>
-            <li><strong>Número de Trámite:</strong> {parsedData.numeroTramite}</li>
-            <li><strong>Apellidos:</strong> {parsedData.apellidos}</li>
-            <li><strong>Nombres:</strong> {parsedData.nombres}</li>
-            <li><strong>Sexo:</strong> {parsedData.sexo}</li>
-            <li><strong>Número de DNI:</strong> {parsedData.numeroDni}</li>
-            <li><strong>Ejemplar:</strong> {parsedData.ejemplar}</li>
-            <li><strong>Fecha de Nacimiento:</strong> {parsedData.fechaNacimiento}</li>
-            <li><strong>Fecha de Emisión:</strong> {parsedData.fechaEmision}</li>
-            <li><strong>CUIL:</strong> {parsedData.cuil.inicio}-{parsedData.numeroDni}-{parsedData.cuil.fin}</li>
-          </ul>
+      {parsedData && showModal && (
+        <div className="modal" style={{ display: "block", backgroundColor: "rgba(0,0,0,0.7)", padding: "20px" }}>
+          <div style={{ backgroundColor: "white", padding: "20px", borderRadius: "8px" }}>
+            <h3>Datos Parseados:</h3>
+            <ul style={{ textAlign: "left", display: "inline-block" }}>
+              <li><strong>Número de Trámite:</strong> {parsedData.numeroTramite}</li>
+              <li><strong>Apellidos:</strong> {parsedData.apellidos}</li>
+              <li><strong>Nombres:</strong> {parsedData.nombres}</li>
+              <li><strong>Sexo:</strong> {parsedData.sexo}</li>
+              <li><strong>Número de DNI:</strong> {parsedData.numeroDni}</li>
+              <li><strong>Ejemplar:</strong> {parsedData.ejemplar}</li>
+              <li><strong>Fecha de Nacimiento:</strong> {parsedData.fechaNacimiento}</li>
+              <li><strong>Fecha de Emisión:</strong> {parsedData.fechaEmision}</li>
+              <li><strong>CUIL:</strong> {parsedData.cuil}</li>
+            </ul>
+            <button onClick={handleSave} style={{ marginTop: "20px", padding: "10px", backgroundColor: "green", color: "white" }}>
+              Guardar en la base de datos
+            </button>
+            <button onClick={handleCancel} style={{ marginTop: "20px", padding: "10px", backgroundColor: "red", color: "white" }}>
+              Cancelar
+            </button>
+          </div>
         </div>
       )}
     </div>
