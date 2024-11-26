@@ -3,18 +3,23 @@ import BarcodeScannerComponent from "react-qr-barcode-scanner";
 
 function DniScanner() {
   const [selectedDeviceId, setSelectedDeviceId] = useState(null);
-  const [videoDevices, setVideoDevices] = useState([]);
   const [scannedData, setScannedData] = useState("");
 
-  // Obtener las cámaras disponibles y configurar la cámara 0 como predeterminada
+  // Obtener las cámaras disponibles y configurar automáticamente la cámara trasera
   useEffect(() => {
     navigator.mediaDevices.enumerateDevices().then((devices) => {
       const videoInputs = devices.filter((device) => device.kind === "videoinput");
-      setVideoDevices(videoInputs);
 
-      // Establecer la cámara 0 como predeterminada si hay dispositivos disponibles
-      if (videoInputs.length > 0) {
-        setSelectedDeviceId(videoInputs[0].deviceId);
+      // Buscar cámara trasera por label o usar la última cámara
+      const backCamera =
+        videoInputs.find((device) =>
+          device.label.toLowerCase().includes("back") || device.label.toLowerCase().includes("rear")
+        ) || videoInputs[videoInputs.length - 1]; // Usar última cámara como fallback
+
+      if (backCamera) {
+        setSelectedDeviceId(backCamera.deviceId);
+      } else if (videoInputs.length > 0) {
+        setSelectedDeviceId(videoInputs[0].deviceId); // Usar la primera si no hay más opciones
       }
     });
   }, []);
@@ -30,22 +35,6 @@ function DniScanner() {
   return (
     <div style={{ textAlign: "center", padding: "20px" }}>
       <h2>Escanear DNI</h2>
-      {videoDevices.length > 1 && (
-        <div>
-          <label htmlFor="camera-select">Seleccionar Cámara:</label>
-          <select
-            id="camera-select"
-            onChange={(e) => setSelectedDeviceId(e.target.value)}
-            value={selectedDeviceId}
-          >
-            {videoDevices.map((device, index) => (
-              <option key={device.deviceId} value={device.deviceId}>
-                {device.label || `Cámara ${index + 1}`}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
       <BarcodeScannerComponent
         width={500}
         height={500}
