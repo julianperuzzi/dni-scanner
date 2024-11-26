@@ -163,7 +163,7 @@ function ScanDni() {
             <li><strong>Ejemplar:</strong> {parsedData.ejemplar}</li>
             <li><strong>Fecha de Nacimiento:</strong> {parsedData.fechaNacimiento}</li>
             <li><strong>Fecha de Emisión:</strong> {parsedData.fechaEmision}</li>
-            <-><strong>CUIL:</strong> {parsedData.cuil.inicio}-{parsedData.numeroDni}-{parsedData.cuil.fin}</li>
+            <li><strong>CUIL:</strong> {parsedData.cuil.inicio}-{parsedData.numeroDni}-{parsedData.cuil.fin}</li>
           </ul>
         </div>
       )}
