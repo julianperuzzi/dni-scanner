@@ -73,7 +73,7 @@ function ScanDni() {
         ejemplar: fields[5],
         fechaNacimiento: validateDate(fields[6]),
         fechaEmision: validateDate(fields[7]),
-        cuil: fields[4] && fields[4].length === 8 ? fields[4] : null, // Verificar si el DNI contiene un CUIL
+        cuil: fields[8]?.slice(0, 2) && fields[8]?.slice(-1) ? fields[8] : null, // Verificar CUIL en el campo 8
       };
 
       validateParsedData(parsed);
