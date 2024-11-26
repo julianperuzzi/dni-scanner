@@ -5,23 +5,26 @@ import BarcodeScannerComponent from "react-qr-barcode-scanner";
 const calculateCuil = (dni, gender) => {
   let type = gender === "M" ? "20" : "27"; // Hombres: 20, Mujeres: 27
   const dniDigits = dni.toString().padStart(8, "0"); // Asegurarse de que el DNI tenga 8 dígitos
-  const dniArray = dniDigits.split("").map(Number);
   
-  // Realizar las multiplicaciones
-  const multipliers = [2, 3, 4, 5, 6, 7, 8, 9];
+  // Se usan los multiplicadores de la fórmula del CUIL
+  const multipliers = [5, 4, 3, 2, 7, 6, 5, 4]; // Los multiplicadores corresponden a la posición en el DNI
+  const dniArray = dniDigits.split("").map(Number); // Convertir el DNI a un array de números
+  
+  // Realizar las multiplicaciones y la suma
   const sum = multipliers.reduce((acc, mul, index) => acc + dniArray[index] * mul, 0);
 
   // Calcular el dígito de verificación
   const remainder = sum % 11;
   let checkDigit = 11 - remainder;
+
   if (remainder === 1) {
-    checkDigit = gender === "M" ? 9 : 4;
-    type = "23"; // Cambiar el tipo a 23 si el resto es 1
+    checkDigit = gender === "M" ? 9 : 4; // Si el resto es 1, el dígito varía según el sexo
+    type = "23"; // Cambiar tipo a 23 si el resto es 1
   } else if (remainder === 0) {
-    checkDigit = 0;
+    checkDigit = 0; // Si el resto es 0, el dígito es 0
   }
 
-  // Retornar el CUIL
+  // Retornar el CUIL con el formato correcto
   return `${type}-${dniDigits}-${checkDigit}`;
 };
 
