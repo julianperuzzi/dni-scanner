@@ -22,7 +22,7 @@ const calculateCuil = (dni, gender) => {
   }
 
   // Retornar el CUIL
-  return `${type}${dniDigits}-${checkDigit}`;
+  return `${type}-${dniDigits}-${checkDigit}`;
 };
 
 function ScanDni() {
@@ -90,7 +90,7 @@ function ScanDni() {
         ejemplar: fields[5],
         fechaNacimiento: validateDate(fields[6]),
         fechaEmision: validateDate(fields[7]),
-        cuil: fields[8] ? fields[8] : calculateCuil(fields[4], fields[3]),
+        cuil: calculateCuil(fields[4], fields[3]),
       };
 
       validateParsedData(parsed);
