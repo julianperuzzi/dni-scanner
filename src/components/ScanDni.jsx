@@ -1,33 +1,29 @@
 import React, { useState, useEffect } from "react";
-import BarcodeScannerComponent from "react-qr-barcode-scanner";
-import { useUser } from '../context/UserContext';
-import { supabase } from '../supabaseClient';
+import { useUser } from "../context/UserContext";
+import { supabase } from "../supabaseClient";
+import CameraSelect from "./CameraSelect";
+import BarcodeScanner from "./BarcodeScannerComponent";
+import ParsedDataModal from "./ParsedDataModal";
 
 function ScanDni() {
-  const [selectedDeviceId, setSelectedDeviceId] = useState(
-    localStorage.getItem("selectedCamera") || null
-  );
+  const [selectedDeviceId, setSelectedDeviceId] = useState(localStorage.getItem("selectedCamera") || null);
   const [cameras, setCameras] = useState([]);
   const [scannedData, setScannedData] = useState("");
   const [parsedData, setParsedData] = useState(null);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
-  const { user, setUser } = useUser(); // Verificar y actualizar el estado del usuario
+  const { user, checkUser } = useUser();
 
+  // Verificar si el usuario está logueado al cargar la página
   useEffect(() => {
-    // Verificar sesión al cargar
-    const checkSession = async () => {
-      const { data: session, error } = await supabase.auth.getSession();
-      if (session?.session?.user) {
-        setUser(session.session.user);
-      } else if (error) {
-        console.error("Error al recuperar la sesión:", error);
-      }
-    };
-    checkSession();
-  }, [setUser]);
+    console.log('Usuario actual:', user); // Agregado para depuración
+    if (!user) {
+      console.log('El usuario no está autenticado. Redirigiendo...');
+      window.location.href = "/login";
+    }
+  }, [user]); // Solo se ejecuta cuando `user` cambia (ya se cargó desde localStorage)
 
   useEffect(() => {
     navigator.mediaDevices
@@ -79,6 +75,12 @@ function ScanDni() {
         ejemplar: fields[5],
         fechaNacimiento: validateDate(fields[6]),
         fechaEmision: validateDate(fields[7]),
+        cuil: fields[8]
+          ? {
+              inicio: fields[8].slice(0, 2) || null,
+              fin: fields[8].slice(-1) || null,
+            }
+          : null,
       };
 
       validateParsedData(parsed);
@@ -126,89 +128,55 @@ function ScanDni() {
     }
 
     try {
-      const { data, error } = await supabase.from("dni_data").insert([{
-        user_id: user.id,
-        document_number: parsedData.numeroTramite,
-        last_name: parsedData.apellidos,
-        first_name: parsedData.nombres,
-        gender: parsedData.sexo,
-        dni_number: parsedData.numeroDni,
-        document_type: parsedData.ejemplar,
-        birth_date: formatToISO(parsedData.fechaNacimiento),
-        issue_date: formatToISO(parsedData.fechaEmision),
-      }]);
+      const { data, error } = await supabase.from("dni_data").insert([
+        {
+          user_id: user.id,
+          document_number: parsedData.numeroTramite,
+          last_name: parsedData.apellidos,
+          first_name: parsedData.nombres,
+          gender: parsedData.sexo,
+          dni_number: parsedData.numeroDni,
+          document_type: parsedData.ejemplar,
+          birth_date: formatToISO(parsedData.fechaNacimiento),
+          issue_date: formatToISO(parsedData.fechaEmision),
+          cuil: parsedData.cuil ? `${parsedData.cuil.inicio}${parsedData.numeroDni}${parsedData.cuil.fin}` : null,
+        },
+      ]);
 
       if (error) {
-        throw error;
+        throw new Error(error.message);
       }
 
+      setSuccessMessage("Datos guardados exitosamente.");
       setShowModal(false);
-      setShowSuccessModal(true); // Mostrar modal de éxito
+      setParsedData(null);
+      setScannedData("");
     } catch (err) {
-      console.error("Error al guardar los datos en la base de datos:", err.message);
+      setError("Error al guardar los datos. Intenta nuevamente.");
     }
   };
 
   const formatToISO = (date) => {
     const [day, month, year] = date.split("/");
-    return `${year}-${month}-${day}`;
+    return new Date(year, month - 1, day).toISOString();
   };
 
   return (
-    <div style={{ textAlign: "center", padding: "20px" }}>
-      <h2>Escanear y Procesar DNI</h2>
-      <div>
-        <h4>Selecciona una cámara:</h4>
-        <select onChange={handleCameraSelect} value={selectedDeviceId}>
-          {cameras.map((camera) => (
-            <option key={camera.deviceId} value={camera.deviceId}>
-              {camera.label || "Cámara sin etiqueta"}
-            </option>
-          ))}
-        </select>
-      </div>
-      {selectedDeviceId ? (
-        <BarcodeScannerComponent
-          width={600}
-          height={400}
-          onUpdate={handleScan}
-          videoConstraints={{
-            deviceId: { exact: selectedDeviceId },
-            width: { ideal: 1920 },
-            height: { ideal: 1080 },
-          }}
+    <div className="bg-gray-800 ">
+      <div className="place-self-center">
+        <h3 className="text-xl font-bold p-2 text-white uppercase">Usuario: {user.username}</h3>
+      <CameraSelect cameras={cameras} selectedDeviceId={selectedDeviceId} handleCameraSelect={handleCameraSelect} />
+      <BarcodeScanner selectedDeviceId={selectedDeviceId} handleScan={handleScan} />
+      {showModal && (
+        <ParsedDataModal
+          parsedData={parsedData}
+          successMessage={successMessage}
+          error={error}
+          handleSave={handleSave}
+          handleCancel={handleCancel}
         />
-      ) : (
-        <p>Cargando escáner...</p>
       )}
-      <h2>Resultado del escaneo:</h2>
-      <p>{scannedData || "Aún no se ha escaneado ningún código."}</p>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      {parsedData && showModal && (
-        <div className="modal">
-          <div>
-            <h3>Datos Parseados:</h3>
-            <ul>
-              <li><strong>Número de Trámite:</strong> {parsedData.numeroTramite}</li>
-              <li><strong>Apellidos:</strong> {parsedData.apellidos}</li>
-              <li><strong>Nombres:</strong> {parsedData.nombres}</li>
-              <li><strong>Sexo:</strong> {parsedData.sexo}</li>
-              <li><strong>DNI:</strong> {parsedData.numeroDni}</li>
-              <li><strong>Fecha de Nacimiento:</strong> {parsedData.fechaNacimiento}</li>
-            </ul>
-            <button onClick={handleSave}>Guardar Datos</button>
-            <button onClick={handleCancel}>Cancelar</button>
-          </div>
-        </div>
-      )}
-
-      {showSuccessModal && (
-        <div className="success-modal">
-          <p>¡Datos guardados correctamente!</p>
-          <button onClick={() => setShowSuccessModal(false)}>Cerrar</button>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

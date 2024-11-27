@@ -5,12 +5,12 @@ const UserContext = createContext();
 
 // Componente para proveer el contexto
 export const UserProvider = ({ children }) => {
-  // Estado para el usuario
   const [user, setUser] = useState(null);
 
   // Usamos useEffect para leer del localStorage al cargar la aplicación
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
+    console.log('Recuperando del localStorage:', storedUser); // Agregado para depuración
     if (storedUser) {
       setUser(JSON.parse(storedUser)); // Si existe, se carga del localStorage
     }
