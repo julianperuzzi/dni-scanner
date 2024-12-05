@@ -16,14 +16,14 @@ function ScanDni() {
 
   const { user, checkUser } = useUser();
 
-  // Verificar si el usuario está logueado al cargar la página
+  
   useEffect(() => {
-    console.log('Usuario actual:', user); // Agregado para depuración
+    console.log('Usuario actual:', user); 
     if (!user) {
       console.log('El usuario no está autenticado. Redirigiendo...');
       window.location.href = "/login";
     }
-  }, [user]); // Solo se ejecuta cuando `user` cambia (ya se cargó desde localStorage)
+  }, [user]);
 
   useEffect(() => {
     navigator.mediaDevices
@@ -166,7 +166,6 @@ function ScanDni() {
       <div className="place-self-center">
         <h3 className="text-xl font-bold p-2 text-white uppercase">Usuario: {user.username}</h3>
       <CameraSelect cameras={cameras} selectedDeviceId={selectedDeviceId} handleCameraSelect={handleCameraSelect} />
-      <BarcodeScanner selectedDeviceId={selectedDeviceId} handleScan={handleScan} />
       {showModal && (
         <ParsedDataModal
           parsedData={parsedData}
@@ -176,6 +175,8 @@ function ScanDni() {
           handleCancel={handleCancel}
         />
       )}
+      <BarcodeScanner selectedDeviceId={selectedDeviceId} handleScan={handleScan} />
+      
       </div>
     </div>
   );
