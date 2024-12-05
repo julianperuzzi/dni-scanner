@@ -8,7 +8,7 @@ const Home = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-8">
-      <h1 className="text-4xl font-semibold text-center text-gray-100 mb-6">
+      <h1 className="text-4xl font-semibold text-center text-purple-300 mb-6">
         Bienvenido a DNI Scanner
       </h1>
 
@@ -16,7 +16,7 @@ const Home = () => {
       {user ? (
         <div className="bg-gray-800 text-gray-100 p-6 rounded-xl shadow-lg mb-8 w-full max-w-md text-center">
           <h2 className="text-2xl font-semibold">¡Hola, {user.username}!</h2>
-          <p className="mb-4 text-green-300/60">Estás conectado a tu cuenta.</p>
+          <p className="mb-4 text-green-300"> ● Estás conectado a tu cuenta.</p>
           <button
             onClick={logout}
             className="bg-red-600 px-6 py-2 rounded-full text-white hover:bg-red-500 transition duration-300"
