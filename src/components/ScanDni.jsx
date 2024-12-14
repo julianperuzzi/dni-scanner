@@ -149,15 +149,17 @@ function ScanDni() {
   };
 
   return (
-    <div className="bg-gray-800">
-      <h3 className="text-xl font-bold p-2 text-white uppercase">Usuario: {user?.username}</h3>
+    <div className="bg-gray-900">
+      <div className="flex border-b bg-gray-950">
+      <h3 className="text-xl font-bold p-2 mt-4 text-gray-300 ">USER: {user?.username}</h3>
       <CameraSelect cameras={cameras} selectedDeviceId={selectedDeviceId} handleCameraSelect={handleCameraSelect} />
+      </div>
       <BarcodeScanner selectedDeviceId={selectedDeviceId} handleScan={handleScan} />
       {notification.message && (
         <div
           className={`fixed top-4 left-1/2 transform -translate-x-1/2 bg-${
             notification.type === "success" ? "green" : "red"
-          }-500 text-white p-3 rounded-md text-center`}
+          }-500 text-white p-3 rounded-md text-center z-20`}
         >
           {notification.message}
         </div>

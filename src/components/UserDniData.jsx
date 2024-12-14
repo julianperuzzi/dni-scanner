@@ -4,6 +4,7 @@ import { useUser } from '../context/UserContext';
 import { supabase } from '../supabaseClient';
 import { parseISO, format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { Link } from 'react-router-dom';
 
 const UserDniData = () => {
   const { user } = useUser();
@@ -70,7 +71,9 @@ const UserDniData = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-800 font-semibold">
+    <div className="flex flex-col items-center min-h-screen p-4 bg-gray-800 font-semibold">
+      
+
         <h3 className="text-xl font-bold mb-6 text-green-500 uppercase">Usuario: {user.username}</h3>
 
       <h1 className="text-3xl font-bold mb-6 text-white">Mis Datos Escaneados</h1>
@@ -86,7 +89,7 @@ const UserDniData = () => {
       {dniData.length === 0 ? (
         <p className="text-white">No has escaneado ningún DNI aún.</p>
       ) : (
-        <div className="overflow-x-auto w-full">
+        <div className="md:overflow-x-auto w-full">
           <table className="min-w-full bg-slate-700/10 border border-gray-600/10 shadow-md rounded-lg">
             <thead>
               <tr className='border-b border-gray-700'>
@@ -94,7 +97,7 @@ const UserDniData = () => {
                 <th className="py-3 px-4 border-r border-gray-700 text-left text-sm font-semibold text-white">Género</th>
                 <th className="py-3 px-4 border-r border-gray-700 text-left text-sm font-semibold text-white">Número DNI</th>
                 <th className="py-3 px-4 border-r border-gray-700 text-left text-sm font-semibold text-white">Fecha de Nacimiento</th>
-                <th className="py-3 px-4 border-r border-gray-700 text-left text-sm font-semibold text-white">Acciones</th>
+                <th className="py-3 px-4 border-r border-gray-700 text-left text-sm font-semibold text-white hidden md:block">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -115,7 +118,7 @@ const UserDniData = () => {
                     </td>
 
 
-                  <td className="py-3 px-4 text-sm flex space-x-4">
+                  <td className="py-3 px-4 text-sm  space-x-4 hidden md:flex">
                     <button
                       onClick={() => copyAllFields(item)}
                       className="text-blue-200 hover:text-blue-300 focus:outline-none"
@@ -135,6 +138,11 @@ const UserDniData = () => {
           </table>
         </div>
       )}
+      <Link
+       to="/"
+       className="bg-gray-700/50 text-white/50 px-6 py-2 hover:text-white hover:bg-gray-600/70 transition duration-300 mt-24 " >
+       ← Volver
+      </Link>
     </div>
   );
 };
