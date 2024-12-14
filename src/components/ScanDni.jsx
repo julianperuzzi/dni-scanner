@@ -3,16 +3,13 @@ import { useUser } from "../context/UserContext";
 import { supabase } from "../supabaseClient";
 import CameraSelect from "./CameraSelect";
 import BarcodeScanner from "./BarcodeScannerComponent";
-import ParsedDataModal from "./ParsedDataModal";
-import Notification from "./Notification";
 
 function ScanDni() {
   const [selectedDeviceId, setSelectedDeviceId] = useState(localStorage.getItem("selectedCamera") || null);
   const [cameras, setCameras] = useState([]);
   const [scannedData, setScannedData] = useState("");
   const [parsedData, setParsedData] = useState(null);
-  const [error, setError] = useState(null);
-  const [successMessage, setSuccessMessage] = useState("");
+  const [notification, setNotification] = useState({ message: "", type: "" });
   const [showModal, setShowModal] = useState(false);
 
   const { user } = useUser();
@@ -84,11 +81,11 @@ function ScanDni() {
       validateParsedData(parsed);
 
       setParsedData(parsed);
-      setError(null);
+      setNotification({ message: "", type: "" });
       setShowModal(true);
     } catch (err) {
       setParsedData(null);
-      setError(err.message);
+      setNotification({ message: err.message, type: "error" });
     }
   };
 
@@ -110,15 +107,11 @@ function ScanDni() {
     }
   };
 
-  const handleCancel = () => {
-    setShowModal(false);
-  };
-
   const handleSave = async () => {
     if (!parsedData) return;
 
     try {
-      const { data, error } = await supabase.from("dni_data").insert([
+      const { error } = await supabase.from("dni_data").insert([
         {
           user_id: user.id,
           document_number: parsedData.numeroTramite,
@@ -135,13 +128,19 @@ function ScanDni() {
 
       if (error) throw new Error(error.message);
 
-      setSuccessMessage("Datos guardados exitosamente.");
+      setNotification({ message: "Datos guardados exitosamente.", type: "success" });
+      setTimeout(() => setNotification({ message: "", type: "" }), 1000);
+
       setShowModal(false);
       setParsedData(null);
       setScannedData("");
     } catch (err) {
-      setError("Error al guardar los datos. Intenta nuevamente.");
+      setNotification({ message: "Error al guardar los datos. Intenta nuevamente.", type: "error" });
     }
+  };
+
+  const handleCancel = () => {
+    setShowModal(false);
   };
 
   const formatToISO = (date) => {
@@ -154,14 +153,67 @@ function ScanDni() {
       <h3 className="text-xl font-bold p-2 text-white uppercase">Usuario: {user?.username}</h3>
       <CameraSelect cameras={cameras} selectedDeviceId={selectedDeviceId} handleCameraSelect={handleCameraSelect} />
       <BarcodeScanner selectedDeviceId={selectedDeviceId} handleScan={handleScan} />
-      <ParsedDataModal
-        parsedData={parsedData}
-        successMessage={successMessage}
-        error={error}
-        handleSave={handleSave}
-        handleCancel={handleCancel}
-      />
-      <Notification message={successMessage || error} type={successMessage ? "success" : "error"} />
+      {notification.message && (
+        <div
+          className={`fixed top-4 left-1/2 transform -translate-x-1/2 bg-${
+            notification.type === "success" ? "green" : "red"
+          }-500 text-white p-3 rounded-md text-center`}
+        >
+          {notification.message}
+        </div>
+      )}
+      {showModal && parsedData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-6">
+            <h3 className="text-2xl font-bold text-green-600 text-center mb-6">Datos del DNI Escaneado</h3>
+            <ul className="space-y-3 text-left">
+              <li>
+                <strong>Número de Trámite:</strong> {parsedData.numeroTramite}
+              </li>
+              <li>
+                <strong>Apellidos:</strong> {parsedData.apellidos}
+              </li>
+              <li>
+                <strong>Nombres:</strong> {parsedData.nombres}
+              </li>
+              <li>
+                <strong>Sexo:</strong> {parsedData.sexo}
+              </li>
+              <li>
+                <strong>Número de DNI:</strong> {parsedData.numeroDni}
+              </li>
+              <li>
+                <strong>Ejemplar:</strong> {parsedData.ejemplar}
+              </li>
+              <li>
+                <strong>Fecha de Nacimiento:</strong> {parsedData.fechaNacimiento}
+              </li>
+              <li>
+                <strong>Fecha de Emisión:</strong> {parsedData.fechaEmision}
+              </li>
+              {parsedData.cuil && parsedData.cuil.inicio && parsedData.cuil.fin && (
+                <li>
+                  <strong>CUIL:</strong> {parsedData.cuil.inicio}-{parsedData.numeroDni}-{parsedData.cuil.fin}
+                </li>
+              )}
+            </ul>
+            <div className="flex justify-between mt-6">
+              <button
+                onClick={handleSave}
+                className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-md"
+              >
+                Guardar Datos
+              </button>
+              <button
+                onClick={handleCancel}
+                className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-md"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
