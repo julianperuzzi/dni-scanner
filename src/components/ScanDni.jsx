@@ -158,7 +158,7 @@ function ScanDni() {
 
   const formatToISO = (date) => {
     const [day, month, year] = date.split("/");
-    return new Date(year, month - 1, day + 1).toISOString();
+    return new Date(year, month - 1, day).toISOString();
   };
 
   return (
