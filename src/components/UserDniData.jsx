@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { useUser } from '../context/UserContext';
 import { supabase } from '../supabaseClient';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 const UserDniData = () => {
   const { user } = useUser();
@@ -107,9 +109,10 @@ const UserDniData = () => {
                   <td className="py-3 px-4 border-r border-gray-900 text-sm text-white cursor-pointer" onClick={() => copyToClipboard(item.dni_number)}>
                     {item.dni_number}
                   </td>
-                  <td className="py-3 px-4 border-r border-gray-900 text-sm text-white cursor-pointer" onClick={() => copyToClipboard(new Date(item.birth_date).toLocaleDateString())}>
-                    {new Date(item.birth_date).toLocaleDateString()}
+                  <td className="py-3 px-4 border-r border-gray-900 text-sm text-white cursor-pointer" onClick={() => copyToClipboard(item.birth_date)}>
+                  {format(new Date(item.birth_date), 'dd/MM/yyyy', { locale: es })}
                   </td>
+
                   <td className="py-3 px-4 text-sm flex space-x-4">
                     <button
                       onClick={() => copyAllFields(item)}
