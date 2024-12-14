@@ -69,7 +69,7 @@ const UserDniData = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-800 font-semibold">
-        <h3 className="text-xl font-bold mb-6 text-white uppercase">Usuario: {user.username}</h3>
+        <h3 className="text-xl font-bold mb-6 text-green-500 uppercase">Usuario: {user.username}</h3>
 
       <h1 className="text-3xl font-bold mb-6 text-white">Mis Datos Escaneados</h1>
 
