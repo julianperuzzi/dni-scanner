@@ -128,14 +128,14 @@ function ScanDni() {
 
       if (error) throw new Error(error.message);
 
-      setNotification({ message: "Datos guardados exitosamente.", type: "success" });
+      setNotification({ message: "Datos guardados exitosamente ✅", type: "success" });
       setTimeout(() => setNotification({ message: "", type: "" }), 1000);
 
       setShowModal(false);
       setParsedData(null);
       setScannedData("");
     } catch (err) {
-      setNotification({ message: "Error al guardar los datos. Intenta nuevamente.", type: "error" });
+      setNotification({ message: "❌ Error al guardar los datos. Intenta nuevamente ❌", type: "error" });
     }
   };
 
@@ -157,9 +157,7 @@ function ScanDni() {
       <BarcodeScanner selectedDeviceId={selectedDeviceId} handleScan={handleScan} />
       {notification.message && (
         <div
-          className={`fixed top-4 left-1/2 transform -translate-x-1/2 bg-${
-            notification.type === "success" ? "green" : "red"
-          }-500 text-white p-3 rounded-md text-center z-20`}
+          className={`fixed top-4 left-1/2 transform -translate-x-1/2 bg-gray-600 text-white p-3 rounded-md text-center z-20`}
         >
           {notification.message}
         </div>
