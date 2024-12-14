@@ -4,6 +4,7 @@ import { supabase } from "../supabaseClient";
 import CameraSelect from "./CameraSelect";
 import BarcodeScanner from "./BarcodeScannerComponent";
 import ParsedDataModal from "./ParsedDataModal";
+import Notification from "./Notification";
 
 function ScanDni() {
   const [selectedDeviceId, setSelectedDeviceId] = useState(localStorage.getItem("selectedCamera") || null);
@@ -11,16 +12,13 @@ function ScanDni() {
   const [scannedData, setScannedData] = useState("");
   const [parsedData, setParsedData] = useState(null);
   const [error, setError] = useState(null);
-  const [showModal, setShowModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [showModal, setShowModal] = useState(false);
 
-  const { user, checkUser } = useUser();
+  const { user } = useUser();
 
-  
   useEffect(() => {
-    console.log('Usuario actual:', user); 
     if (!user) {
-      console.log('El usuario no está autenticado. Redirigiendo...');
       window.location.href = "/login";
     }
   }, [user]);
@@ -117,15 +115,7 @@ function ScanDni() {
   };
 
   const handleSave = async () => {
-    if (!parsedData) {
-      console.error("No hay datos para guardar.");
-      return;
-    }
-
-    if (!user || !user.id) {
-      console.error("El usuario no está autenticado.");
-      return;
-    }
+    if (!parsedData) return;
 
     try {
       const { data, error } = await supabase.from("dni_data").insert([
@@ -143,9 +133,7 @@ function ScanDni() {
         },
       ]);
 
-      if (error) {
-        throw new Error(error.message);
-      }
+      if (error) throw new Error(error.message);
 
       setSuccessMessage("Datos guardados exitosamente.");
       setShowModal(false);
@@ -162,22 +150,18 @@ function ScanDni() {
   };
 
   return (
-    <div className="bg-gray-800 ">
-      <div className="place-self-center">
-        <h3 className="text-xl font-bold p-2 text-white uppercase">Usuario: {user.username}</h3>
+    <div className="bg-gray-800">
+      <h3 className="text-xl font-bold p-2 text-white uppercase">Usuario: {user?.username}</h3>
       <CameraSelect cameras={cameras} selectedDeviceId={selectedDeviceId} handleCameraSelect={handleCameraSelect} />
-      {showModal && (
-        <ParsedDataModal
-          parsedData={parsedData}
-          successMessage={successMessage}
-          error={error}
-          handleSave={handleSave}
-          handleCancel={handleCancel}
-        />
-      )}
       <BarcodeScanner selectedDeviceId={selectedDeviceId} handleScan={handleScan} />
-      
-      </div>
+      <ParsedDataModal
+        parsedData={parsedData}
+        successMessage={successMessage}
+        error={error}
+        handleSave={handleSave}
+        handleCancel={handleCancel}
+      />
+      <Notification message={successMessage || error} type={successMessage ? "success" : "error"} />
     </div>
   );
 }
