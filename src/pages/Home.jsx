@@ -26,7 +26,7 @@ const Home = () => {
         </div>
       ) : (
         <div className="bg-gray-800 text-gray-100 p-6 rounded-xl shadow-lg mb-8 w-full max-w-md text-center">
-          <h2 className="text-2xl font-semibold">◈ No estás autenticado</h2>
+          <h2 className="text-xl font-semibold">◈ No estás autenticado ◈</h2>
           <Link
             to="/login"
             className="bg-blue-600 text-white px-6 py-2 rounded-full mt-4 inline-block hover:bg-blue-500 transition duration-300"
