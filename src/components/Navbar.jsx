@@ -10,11 +10,11 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-gray-800 p-4 shadow-md">
+    <nav className="bg-gray-800 p-4 shadow-md border-b">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Logo */}
-        <div className="text-white text-2xl font-bold">
-          <Link to="/">DNI Scanner  🪪</Link>
+        <div className="text-gray-300 text-2xl font-bold">
+          <Link to="/">D.N.I Scanner 🪪</Link>
         </div>
 
         {/* Menu Items */}
