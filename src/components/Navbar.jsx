@@ -14,7 +14,7 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Logo */}
         <div className="text-white text-2xl font-bold">
-          <Link to="/">DNI Scanner 🪪</Link>
+          <Link to="/">DNI Scanner  🪪</Link>
         </div>
 
         {/* Menu Items */}
