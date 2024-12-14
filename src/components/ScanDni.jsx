@@ -14,10 +14,13 @@ function ScanDni() {
   const [showModal, setShowModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
-  const { user } = useUser();
+  const { user, checkUser } = useUser();
 
+  
   useEffect(() => {
+    console.log('Usuario actual:', user); 
     if (!user) {
+      console.log('El usuario no está autenticado. Redirigiendo...');
       window.location.href = "/login";
     }
   }, [user]);
@@ -59,23 +62,29 @@ function ScanDni() {
     try {
       const fields = code.split("@");
 
-      if (fields.length < 9) {
+      if (fields.length < 8) {
         throw new Error("Código incompleto. Verifica el escaneo.");
       }
 
       const parsed = {
         numeroTramite: fields[0],
-        apellidos: fields[1],
-        nombres: fields[2],
+        apellidos: correctSpecialChars(fields[1]),
+        nombres: correctSpecialChars(fields[2]),
         sexo: fields[3],
         numeroDni: fields[4],
-        tipoDocumento: fields[5],
+        ejemplar: fields[5],
         fechaNacimiento: validateDate(fields[6]),
         fechaEmision: validateDate(fields[7]),
-        cuil: fields[8] ? `${fields[8].slice(0, 2)}-${fields[4]}-${fields[8].slice(-1)}` : null,
+        cuil: fields[8]
+          ? {
+              inicio: fields[8].slice(0, 2) || null,
+              fin: fields[8].slice(-1) || null,
+            }
+          : null,
       };
 
       validateParsedData(parsed);
+
       setParsedData(parsed);
       setError(null);
       setShowModal(true);
@@ -83,6 +92,10 @@ function ScanDni() {
       setParsedData(null);
       setError(err.message);
     }
+  };
+
+  const correctSpecialChars = (text) => {
+    return text.replace(/NXX/g, "Ñ").replace(/UXX/g, "Ü");
   };
 
   const validateDate = (date) => {
@@ -104,10 +117,18 @@ function ScanDni() {
   };
 
   const handleSave = async () => {
-    if (!parsedData) return;
+    if (!parsedData) {
+      console.error("No hay datos para guardar.");
+      return;
+    }
+
+    if (!user || !user.id) {
+      console.error("El usuario no está autenticado.");
+      return;
+    }
 
     try {
-      const { error } = await supabase.from("dni_data").insert([
+      const { data, error } = await supabase.from("dni_data").insert([
         {
           user_id: user.id,
           document_number: parsedData.numeroTramite,
@@ -115,14 +136,16 @@ function ScanDni() {
           first_name: parsedData.nombres,
           gender: parsedData.sexo,
           dni_number: parsedData.numeroDni,
-          document_type: parsedData.tipoDocumento,
+          document_type: parsedData.ejemplar,
           birth_date: formatToISO(parsedData.fechaNacimiento),
           issue_date: formatToISO(parsedData.fechaEmision),
-          cuil_full: parsedData.cuil,
+          cuil_full: parsedData.cuil ? `${parsedData.cuil.inicio}${parsedData.numeroDni}${parsedData.cuil.fin}` : null,
         },
       ]);
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(error.message);
+      }
 
       setSuccessMessage("Datos guardados exitosamente.");
       setShowModal(false);
@@ -135,12 +158,13 @@ function ScanDni() {
 
   const formatToISO = (date) => {
     const [day, month, year] = date.split("/");
-    return new Date(year, month - 1, day).toISOString();
+    return new Date(year, month - 1, day + 1).toISOString();
   };
 
   return (
-    <div className="bg-gray-800">
-      <h3 className="text-xl font-bold p-2 text-white uppercase">Usuario: {user?.username}</h3>
+    <div className="bg-gray-800 ">
+      <div className="place-self-center">
+        <h3 className="text-xl font-bold p-2 text-white uppercase">Usuario: {user.username}</h3>
       <CameraSelect cameras={cameras} selectedDeviceId={selectedDeviceId} handleCameraSelect={handleCameraSelect} />
       {showModal && (
         <ParsedDataModal
@@ -152,6 +176,8 @@ function ScanDni() {
         />
       )}
       <BarcodeScanner selectedDeviceId={selectedDeviceId} handleScan={handleScan} />
+      
+      </div>
     </div>
   );
 }

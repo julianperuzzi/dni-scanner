@@ -1,0 +1,117 @@
+import React, { useState } from "react";
+
+const Pdf417Parser = () => {
+  const [rawData, setRawData] = useState("");
+  const [parsedData, setParsedData] = useState(null);
+  const [error, setError] = useState(null);
+
+  // Función para manejar la entrada del código escaneado
+  const handleInputChange = (e) => {
+    setRawData(e.target.value);
+  };
+
+  // Función para parsear el código PDF417
+  const parsePdf417 = (code) => {
+    try {
+      // Separar los campos por el delimitador "@"
+      const fields = code.split("@");
+
+      if (fields.length < 9) {
+        throw new Error("Código incompleto. Verifica el escaneo.");
+      }
+
+      // Mapear los datos
+      const parsed = {
+        numeroTramite: fields[0],
+        apellidos: correctSpecialChars(fields[1]),
+        nombres: correctSpecialChars(fields[2]),
+        sexo: fields[3],
+        numeroDni: fields[4],
+        ejemplar: fields[5],
+        fechaNacimiento: validateDate(fields[6]),
+        fechaEmision: validateDate(fields[7]),
+        cuil: {
+          inicio: fields[8]?.slice(0, 2) || null,
+          fin: fields[8]?.slice(-1) || null,
+        },
+      };
+
+      // Validar campos clave
+      validateParsedData(parsed);
+
+      // Si todo está correcto, actualizar estado
+      setParsedData(parsed);
+      setError(null);
+    } catch (err) {
+      setParsedData(null);
+      setError(err.message);
+    }
+  };
+
+  // Función para corregir caracteres especiales
+  const correctSpecialChars = (text) => {
+    return text
+      .replace(/NXX/g, "Ñ")
+      .replace(/UXX/g, "Ü")
+      ;
+  };
+
+  // Función para validar fechas
+  const validateDate = (date) => {
+    const regex = /^\d{2}\/\d{2}\/\d{4}$/;
+    if (!regex.test(date)) {
+      throw new Error(`Fecha inválida: ${date}`);
+    }
+    return date;
+  };
+
+  // Función para validar los datos procesados
+  const validateParsedData = (data) => {
+    if (!data.numeroDni || !data.apellidos || !data.nombres) {
+      throw new Error("Faltan datos clave: DNI, apellidos o nombres.");
+    }
+  };
+
+  // Manejar el envío del código
+  const handleParse = () => {
+    if (rawData) {
+      parsePdf417(rawData);
+    } else {
+      setError("Por favor, ingresa el código escaneado.");
+    }
+  };
+
+  return (
+    <div className="pdf-parser">
+      <h2>Lectura y Validación del Código PDF417</h2>
+      <textarea
+        value={rawData}
+        onChange={handleInputChange}
+        placeholder="Pega aquí el código escaneado..."
+        rows="5"
+      ></textarea>
+      <button onClick={handleParse}>Procesar Código</button>
+
+      {error && <p className="error">{error}</p>}
+
+      {parsedData && (
+        <div className="parsed-data">
+          <h3>Datos Parseados:</h3>
+          <ul>
+            <li><strong>Número de Trámite:</strong> {parsedData.numeroTramite}</li>
+            <li><strong>Apellidos:</strong> {parsedData.apellidos}</li>
+            <li><strong>Nombres:</strong> {parsedData.nombres}</li>
+            <li><strong>Sexo:</strong> {parsedData.sexo}</li>
+            <li><strong>Número de DNI:</strong> {parsedData.numeroDni}</li>
+            <li><strong>Ejemplar:</strong> {parsedData.ejemplar}</li>
+            <li><strong>Fecha de Nacimiento:</strong> {parsedData.fechaNacimiento}</li>
+            <li><strong>Fecha de Emisión:</strong> {parsedData.fechaEmision}</li>
+            <li><strong>CUIL:</strong> {parsedData.cuil.inicio}-{parsedData.cuil.fin}</li>
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Pdf417Parser;
