@@ -109,12 +109,10 @@ const UserDniData = () => {
                   <td className="py-3 px-4 border-r border-gray-900 text-sm text-white cursor-pointer" onClick={() => copyToClipboard(item.dni_number)}>
                     {item.dni_number}
                   </td>
-                  <td
-  className="py-3 px-4 border-r border-gray-900 text-sm text-white cursor-pointer"
-  onClick={() => copyToClipboard(format(parseISO(item.birth_date), 'dd/MM/yyyy', { locale: es }))}
->
-  {format(parseISO(item.birth_date), 'dd/MM/yyyy', { locale: es })}
-</td>
+                  <td  className="py-3 px-4 border-r border-gray-900 text-sm text-white cursor-pointer"
+                   onClick={() => copyToClipboard(format(parseISO(item.birth_date), 'dd/MM/yyyy', { locale: es }))}
+                    >  {format(parseISO(item.birth_date), 'dd/MM/yyyy', { locale: es })}
+                    </td>
 
 
                   <td className="py-3 px-4 text-sm flex space-x-4">
