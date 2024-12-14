@@ -129,7 +129,7 @@ function ScanDni() {
       if (error) throw new Error(error.message);
 
       setNotification({ message: "Datos guardados exitosamente ✅", type: "success" });
-      setTimeout(() => setNotification({ message: "", type: "" }), 1000);
+      setTimeout(() => setNotification({ message: "", type: "" }), 2000);
 
       setShowModal(false);
       setParsedData(null);
