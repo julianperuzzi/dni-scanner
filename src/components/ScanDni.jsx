@@ -157,7 +157,7 @@ function ScanDni() {
       <BarcodeScanner selectedDeviceId={selectedDeviceId} handleScan={handleScan} />
       {notification.message && (
         <div
-          className={`fixed top-4 left-1/2 transform -translate-x-1/2 bg-indigo-700 text-white p-6 rounded-md text-center z-20 font-bold`}
+          className={`fixed top-24 left-1/2 transform text-2xl -translate-x-1/2 bg-indigo-700 text-white p-6 rounded-md text-center z-20 font-bold`}
         >
           {notification.message}
         </div>
