@@ -8,7 +8,7 @@ const Home = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white p-8">
-      <h1 className="text-4xl font-semibold text-center text-gray-300 mb-6 uppercase bg-slate-950 w-full p-4">
+      <h1 className="text-4xl font-semibold text-center text-gray-300 mb-6 uppercase w-full p-4">
         DNI Scanner
       </h1>
 
