@@ -45,6 +45,8 @@ function ScanDni() {
   };
 
   const handleScan = (err, result) => {
+    if (showModal) return; // Evitar procesar nuevos escaneos mientras el modal está abierto
+
     if (result) {
       setScannedData(result.text);
       parsePdf417(result.text);
@@ -82,7 +84,7 @@ function ScanDni() {
 
       setParsedData(parsed);
       setNotification({ message: "", type: "" });
-      setShowModal(true);
+      setShowModal(true); // Mostrar modal con los datos escaneados
     } catch (err) {
       setParsedData(null);
       setNotification({ message: err.message, type: "error" });
@@ -131,16 +133,20 @@ function ScanDni() {
       setNotification({ message: "✅ Datos guardados exitosamente.", type: "success" });
       setTimeout(() => setNotification({ message: "", type: "" }), 2000);
 
-      setShowModal(false);
-      setParsedData(null);
-      setScannedData("");
+      resetScanner();
     } catch (err) {
       setNotification({ message: "❌ Error al guardar los datos. Intenta nuevamente.", type: "error" });
     }
   };
 
   const handleCancel = () => {
-    setShowModal(false);
+    resetScanner();
+  };
+
+  const resetScanner = () => {
+    setShowModal(false); // Ocultar modal
+    setParsedData(null); // Limpiar datos procesados
+    setScannedData(""); // Reactivar el escaneo
   };
 
   const formatToISO = (date) => {
@@ -151,8 +157,8 @@ function ScanDni() {
   return (
     <div className="bg-gray-900">
       <div className="flex border-b bg-gray-950">
-      <h3 className="text-xl font-bold p-2 mt-4 text-gray-300 ">USER: {user?.username}</h3>
-      <CameraSelect cameras={cameras} selectedDeviceId={selectedDeviceId} handleCameraSelect={handleCameraSelect} />
+        <h3 className="text-xl font-bold p-2 mt-4 text-gray-300 ">USER: {user?.username}</h3>
+        <CameraSelect cameras={cameras} selectedDeviceId={selectedDeviceId} handleCameraSelect={handleCameraSelect} />
       </div>
       <BarcodeScanner selectedDeviceId={selectedDeviceId} handleScan={handleScan} />
       {notification.message && (
