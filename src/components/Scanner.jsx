@@ -46,7 +46,7 @@ function Scanner() {
     if (result) {
       const parsedData = parsePdf417(result.text);
       if (parsedData) {
-        navigate("/parsed-data", { state: { parsedData } }); // Redirigir a la nueva ruta con datos
+        saveToDatabase(parsedData);
       }
     } else if (err) {
       setNotification({ message: "Escaneando...", type: "error" });
@@ -67,6 +67,7 @@ function Scanner() {
         ejemplar: fields[5],
         fechaNacimiento: validateDate(fields[6]),
         fechaEmision: validateDate(fields[7]),
+        cuil: fields[8] || null, // Agregamos el CUIL si está disponible
       };
 
       validateParsedData(parsed);
@@ -91,6 +92,29 @@ function Scanner() {
     }
   };
 
+  const saveToDatabase = async (data) => {
+    try {
+      const response = await fetch("/api/save-dni-data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al guardar los datos en la base de datos.");
+      }
+
+      setNotification({ message: "Datos guardados exitosamente.", type: "success" });
+
+      setTimeout(() => {
+        setNotification({ message: "", type: "" });
+        navigate("/scanner"); // Redirige al escáner
+      }, 2000);
+    } catch (error) {
+      setNotification({ message: error.message, type: "error" });
+    }
+  };
+
   return (
     <div className="bg-gray-900">
       <div className="flex border-b bg-gray-950">
@@ -99,7 +123,13 @@ function Scanner() {
       </div>
       <BarcodeScanner selectedDeviceId={selectedDeviceId} handleScan={handleScan} />
       {notification.message && (
-        <div className="fixed top-24 left-4 items-center text-white bg-blue-600/50 p-4 rounded-md">{notification.message}</div>
+        <div
+          className={`fixed top-24 left-4 items-center p-4 rounded-md ${
+            notification.type === "success" ? "bg-green-600" : "bg-red-600"
+          } text-white`}
+        >
+          {notification.message}
+        </div>
       )}
     </div>
   );
