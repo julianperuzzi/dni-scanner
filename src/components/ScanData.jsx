@@ -91,6 +91,7 @@ function ScanData() {
     } catch (err) {
       setNotification({ message: "❌ Error al guardar los datos. Intenta nuevamente.", type: "error" });
     }
+    navigate("/scan"); // Redirige de vuelta a la página de escaneo
   };
 
   const handleCancel = () => {
@@ -103,7 +104,7 @@ function ScanData() {
   };
 
   return (
-    <div className="bg-gray-900">
+    <div className="bg-gray-100">
       <div className="max-w-xl mx-auto p-4">
         <h3 className="text-2xl font-bold text-center text-green-600 mb-6">Datos del DNI Escaneado</h3>
         {notification.message && (
