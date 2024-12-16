@@ -67,9 +67,6 @@ function Scanner() {
         ejemplar: fields[5],
         fechaNacimiento: validateDate(fields[6]),
         fechaEmision: validateDate(fields[7]),
-        cuil: fields[8]
-          ? { inicio: fields[8].slice(0, 2), fin: fields[8].slice(-1) }
-          : null,
       };
 
       validateParsedData(parsed);

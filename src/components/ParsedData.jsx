@@ -24,7 +24,7 @@ function ParsedData() {
           document_type: parsedData.ejemplar,
           birth_date: formatToISO(parsedData.fechaNacimiento),
           issue_date: formatToISO(parsedData.fechaEmision),
-          cuil_full: parsedData.cuil ? parsedData.cuil : null,
+          cuil_full: parsedData.cuil || null,
         },
       ]);
 
@@ -33,7 +33,7 @@ function ParsedData() {
       alert("Datos guardados correctamente.");
       navigate("/scanner");
     } catch (error) {
-      alert("Error al guardar los datos.");
+      alert("Error al guardar los datos: " + error.message);
     }
   };
 
@@ -43,17 +43,62 @@ function ParsedData() {
   };
 
   return (
-    <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">Datos Escaneados</h2>
-      <ul>
-        {Object.keys(parsedData).map((key) => (
-          <li key={key}>
-            <strong>{key}:</strong> {parsedData[key]}
+    <div className="p-6 max-w-xl mx-auto bg-white rounded-lg shadow-md mt-10">
+      <h2 className="text-2xl font-bold mb-6 text-gray-800 text-center">Datos Escaneados</h2>
+      <ul className="space-y-4">
+        <li>
+          <strong className="text-gray-600">Número de Trámite:</strong>{" "}
+          <span className="text-gray-800">{parsedData.numeroTramite}</span>
+        </li>
+        <li>
+          <strong className="text-gray-600">Apellidos:</strong>{" "}
+          <span className="text-gray-800">{parsedData.apellidos}</span>
+        </li>
+        <li>
+          <strong className="text-gray-600">Nombres:</strong>{" "}
+          <span className="text-gray-800">{parsedData.nombres}</span>
+        </li>
+        <li>
+          <strong className="text-gray-600">Sexo:</strong>{" "}
+          <span className="text-gray-800">{parsedData.sexo}</span>
+        </li>
+        <li>
+          <strong className="text-gray-600">DNI:</strong>{" "}
+          <span className="text-gray-800">{parsedData.numeroDni}</span>
+        </li>
+        <li>
+          <strong className="text-gray-600">Ejemplar:</strong>{" "}
+          <span className="text-gray-800">{parsedData.ejemplar}</span>
+        </li>
+        <li>
+          <strong className="text-gray-600">Fecha de Nacimiento:</strong>{" "}
+          <span className="text-gray-800">{parsedData.fechaNacimiento}</span>
+        </li>
+        <li>
+          <strong className="text-gray-600">Fecha de Emisión:</strong>{" "}
+          <span className="text-gray-800">{parsedData.fechaEmision}</span>
+        </li>
+        {parsedData.cuil && (
+          <li>
+            <strong className="text-gray-600">CUIL:</strong>{" "}
+            <span className="text-gray-800">{parsedData.cuil}</span>
           </li>
-        ))}
+        )}
       </ul>
-      <button onClick={handleSave} className="bg-green-500 p-2 text-white">Guardar</button>
-      <button onClick={() => navigate("/scanner")} className="bg-red-500 p-2 text-white">Cancelar</button>
+      <div className="mt-6 flex justify-between">
+        <button
+          onClick={handleSave}
+          className="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded shadow"
+        >
+          Guardar
+        </button>
+        <button
+          onClick={() => navigate("/scanner")}
+          className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded shadow"
+        >
+          Cancelar
+        </button>
+      </div>
     </div>
   );
 }
