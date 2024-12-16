@@ -7,8 +7,6 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import Scanner from './components/ScanData';
-import ParsedData from './components/ViewDniData';
 import ScanData from './components/ScanData';
 
 const App = () => {
