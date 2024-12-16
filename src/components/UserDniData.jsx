@@ -71,7 +71,7 @@ const UserDniData = () => {
   };
 
   return (
-    <div className="flex flex-col items-center min-h-screen p-4 bg-gray-800 font-semibold">
+    <div className="flex flex-col items-center min-h-screen  bg-gray-800 font-semibold">
       
 
         <h3 className="text-xl font-bold mb-6 text-green-500 uppercase">Usuario: {user.username}</h3>
