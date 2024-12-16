@@ -49,7 +49,7 @@ function Scanner() {
         navigate("/parsed-data", { state: { parsedData } }); // Redirigir a la nueva ruta con datos
       }
     } else if (err) {
-      setNotification({ message: "Error al escanear. Intente nuevamente.", type: "error" });
+      setNotification({ message: "Escaneando...", type: "error" });
     }
   };
 
@@ -99,7 +99,7 @@ function Scanner() {
       </div>
       <BarcodeScanner selectedDeviceId={selectedDeviceId} handleScan={handleScan} />
       {notification.message && (
-        <div className="fixed top-20 text-white bg-red-600 p-4 rounded-md">{notification.message}</div>
+        <div className="fixed top-24 left-4 items-center text-white bg-blue-600/50 p-4 rounded-md">{notification.message}</div>
       )}
     </div>
   );
