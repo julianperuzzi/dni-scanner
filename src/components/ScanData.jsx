@@ -73,7 +73,7 @@ function ScanData() {
 
   const handleSave = async () => {
     if (!parsedData) return;
-
+  
     try {
       const { error } = await supabase.from("dni_data").insert([{
         document_number: parsedData.numeroTramite,
@@ -86,16 +86,27 @@ function ScanData() {
         issue_date: formatToISO(parsedData.fechaEmision),
         cuil_full: parsedData.cuil ? `${parsedData.cuil.inicio}${parsedData.numeroDni}${parsedData.cuil.fin}` : null,
       }]);
-
+  
       if (error) throw new Error(error.message);
-
+  
       setNotification({ message: "✅ Datos guardados exitosamente.", type: "success" });
-      setTimeout(() => setNotification({ message: "", type: "" }), 2000);
+  
+      // Mostrar notificación por 2 segundos antes de redirigir
+      setTimeout(() => {
+        setNotification({ message: "", type: "" });
+        navigate("/scan"); // Redirige de vuelta a la página de escaneo
+      }, 2000);
+  
     } catch (err) {
       setNotification({ message: "❌ Error al guardar los datos. Intenta nuevamente.", type: "error" });
+      
+      // Mostrar notificación por 2 segundos en caso de error
+      setTimeout(() => {
+        setNotification({ message: "", type: "" });
+      }, 2000);
     }
-    navigate("/scan"); // Redirige de vuelta a la página de escaneo
   };
+  
 
   const handleCancel = () => {
     navigate("/scan"); // Redirige de vuelta a la página de escaneo
