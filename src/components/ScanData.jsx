@@ -77,6 +77,7 @@ function ScanData() {
   
     try {
       const { error } = await supabase.from("dni_data").insert([{
+        user_id: 1,
         document_number: parsedData.numeroTramite,
         last_name: parsedData.apellidos,
         first_name: parsedData.nombres,
