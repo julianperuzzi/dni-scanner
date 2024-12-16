@@ -56,6 +56,8 @@ function ScanDni() {
   };
 
   const parsePdf417 = (code) => {
+    if (showModal) return; // Evitar procesar nuevos códigos mientras el modal está abierto
+
     try {
       const fields = code.split("@");
 
