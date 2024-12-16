@@ -21,8 +21,8 @@ function ScanData() {
       const fields = code.split("@");
 
       if (fields.length < 8) {
-        throw new Error("Código incompleto. Verifica el escaneo."),
         navigate("/scan"); // Redirige de vuelta a la página de escaneo
+        throw new Error("Código incompleto. Verifica el escaneo.");
       }
 
       const parsed = {
@@ -58,18 +58,19 @@ function ScanData() {
   const validateDate = (date) => {
     const regex = /^\d{2}\/\d{2}\/\d{4}$/;
     if (!regex.test(date)) {
-      throw new Error(`Fecha inválida: ${date}`),
       navigate("/scan"); // Redirige de vuelta a la página de escaneo
+      throw new Error(`Fecha inválida: ${date}`);    
     }
     return date;
   };
 
   const validateParsedData = (data) => {
     if (!data.numeroDni || !data.apellidos || !data.nombres) {
-      throw new Error("Faltan datos clave: DNI, apellidos o nombres."),
       navigate("/scan"); // Redirige de vuelta a la página de escaneo
+      throw new Error("Faltan datos clave: DNI, apellidos o nombres.");
     }
   };
+  
 
   const handleSave = async () => {
     if (!parsedData) return;
