@@ -10,6 +10,7 @@ function ScanDni() {
   const [cameras, setCameras] = useState([]);
   const [scannedData, setScannedData] = useState("");
   const [notification, setNotification] = useState({ message: "", type: "" });
+  const [parsedData, setParsedData] = useState(null); // Definir estado para parsedData
 
   const { user } = useUser();
   const navigate = useNavigate();  // Función para redirigir
@@ -45,11 +46,36 @@ function ScanDni() {
   };
 
   const handleScan = (err, result) => {
+    if (err) {
+      setNotification({ message: "❌ Error al escanear. Intenta nuevamente.", type: "error" });
+      return;
+    }
+
     if (result) {
-      setScannedData(result.text);
-      navigate('/data', { state: { scannedData: result.text } });  // Redirige a /data con los datos escaneados
-    } else if (err) {
-      console.error("Error al escanear:", err);
+      console.log(result); // Verifica si el resultado es correcto
+
+      const parsed = parsePdf417(result.text); // Asegúrate de que parsePdf417 esté funcionando
+
+      if (parsed) {
+        setParsedData(parsed);
+        validateParsedData(parsed); // Validar los datos inmediatamente
+      } else {
+        setNotification({ message: "❌ Datos incorrectos. Verifica el código escaneado.", type: "error" });
+      }
+    }
+  };
+
+  const validateParsedData = (data) => {
+    const errors = [];
+
+    if (!data.numeroDni || !data.apellidos || !data.nombres) {
+      errors.push("Faltan datos clave: DNI, apellidos o nombres.");
+    }
+
+    if (errors.length > 0) {
+      setNotification({ message: errors.join(" "), type: "error" });
+    } else {
+      setNotification({ message: "✅ Datos válidos. Listos para guardar.", type: "success" });
     }
   };
 
