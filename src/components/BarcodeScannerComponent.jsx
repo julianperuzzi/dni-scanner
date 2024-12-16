@@ -7,7 +7,7 @@ function BarcodeScanner({ selectedDeviceId, handleScan }) {
       <BarcodeScannerComponent
         width={500}
         height={300}        
-        delay={200}
+        delay={100}
         onUpdate={handleScan}
         videoConstraints={{
           deviceId: { exact: selectedDeviceId },
