@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";  // Importamos useNavigate
 import { useUser } from "../context/UserContext";
 import { supabase } from "../supabaseClient";
 import CameraSelect from "./CameraSelect";
@@ -8,11 +9,10 @@ function ScanDni() {
   const [selectedDeviceId, setSelectedDeviceId] = useState(localStorage.getItem("selectedCamera") || null);
   const [cameras, setCameras] = useState([]);
   const [scannedData, setScannedData] = useState("");
-  const [parsedData, setParsedData] = useState(null);
   const [notification, setNotification] = useState({ message: "", type: "" });
-  const [showModal, setShowModal] = useState(false);
 
   const { user } = useUser();
+  const navigate = useNavigate();  // Función para redirigir
 
   useEffect(() => {
     if (!user) {
@@ -45,115 +45,12 @@ function ScanDni() {
   };
 
   const handleScan = (err, result) => {
-    if (showModal) return; // Evitar procesar nuevos escaneos mientras el modal está abierto
-
     if (result) {
       setScannedData(result.text);
-      parsePdf417(result.text);
+      navigate('/data', { state: { scannedData: result.text } });  // Redirige a /data con los datos escaneados
     } else if (err) {
       console.error("Error al escanear:", err);
     }
-  };
-
-  const parsePdf417 = (code) => {
-    if (showModal) return; // Evitar procesar nuevos códigos mientras el modal está abierto
-
-    try {
-      const fields = code.split("@");
-
-      if (fields.length < 8) {
-        throw new Error("Código incompleto. Verifica el escaneo.");
-      }
-
-      const parsed = {
-        numeroTramite: fields[0],
-        apellidos: correctSpecialChars(fields[1]),
-        nombres: correctSpecialChars(fields[2]),
-        sexo: fields[3],
-        numeroDni: fields[4],
-        ejemplar: fields[5],
-        fechaNacimiento: validateDate(fields[6]),
-        fechaEmision: validateDate(fields[7]),
-        cuil: fields[8]
-          ? {
-              inicio: fields[8].slice(0, 2) || null,
-              fin: fields[8].slice(-1) || null,
-            }
-          : null,
-      };
-
-      validateParsedData(parsed);
-
-      setParsedData(parsed);
-      setNotification({ message: "", type: "" });
-      setShowModal(true); // Mostrar modal con los datos escaneados
-    } catch (err) {
-      setParsedData(null);
-      setNotification({ message: err.message, type: "error" });
-    }
-  };
-
-  const correctSpecialChars = (text) => {
-    return text.replace(/NXX/g, "Ñ").replace(/UXX/g, "Ü");
-  };
-
-  const validateDate = (date) => {
-    const regex = /^\d{2}\/\d{2}\/\d{4}$/;
-    if (!regex.test(date)) {
-      throw new Error(`Fecha inválida: ${date}`);
-    }
-    return date;
-  };
-
-  const validateParsedData = (data) => {
-    if (!data.numeroDni || !data.apellidos || !data.nombres) {
-      throw new Error("Faltan datos clave: DNI, apellidos o nombres.");
-    }
-  };
-
-  const handleSave = async () => {
-    if (!parsedData) return;
-
-    try {
-      const { error } = await supabase.from("dni_data").insert([
-        {
-          user_id: user.id,
-          document_number: parsedData.numeroTramite,
-          last_name: parsedData.apellidos,
-          first_name: parsedData.nombres,
-          gender: parsedData.sexo,
-          dni_number: parsedData.numeroDni,
-          document_type: parsedData.ejemplar,
-          birth_date: formatToISO(parsedData.fechaNacimiento),
-          issue_date: formatToISO(parsedData.fechaEmision),
-          cuil_full: parsedData.cuil ? `${parsedData.cuil.inicio}${parsedData.numeroDni}${parsedData.cuil.fin}` : null,
-        },
-      ]);
-
-      if (error) throw new Error(error.message);
-
-      setNotification({ message: "✅ Datos guardados exitosamente.", type: "success" });
-      setTimeout(() => setNotification({ message: "", type: "" }), 2000);
-
-      resetScanner();
-    } catch (err) {
-      setNotification({ message: "❌ Error al guardar los datos. Intenta nuevamente.", type: "error" });
-    }
-  };
-
-  const handleCancel = () => {
-    resetScanner();
-  };
-
-  const resetScanner = () => {
-    setShowModal(false); // Ocultar modal
-    setParsedData(null); // Limpiar datos procesados
-    setScannedData(""); // Reactivar el escaneo
-  };
-
-  const formatToISO = (date) => {
-    const [day, month, year] = date.split("/");
-    return new Date(year, month - 1, day).toISOString();
   };
 
   return (
@@ -164,62 +61,8 @@ function ScanDni() {
       </div>
       <BarcodeScanner selectedDeviceId={selectedDeviceId} handleScan={handleScan} />
       {notification.message && (
-        <div
-          className={`fixed top-60 left-1/2 transform text-2xl -translate-x-1/2 bg-indigo-900/70 text-white p-6 rounded-md text-center z-70 font-semibold uppercase`}
-        >
+        <div className={`fixed top-60 left-1/2 transform text-2xl -translate-x-1/2 bg-indigo-900/70 text-white p-6 rounded-md text-center z-70 font-semibold uppercase`}>
           {notification.message}
-        </div>
-      )}
-      {showModal && parsedData && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-6">
-            <h3 className="text-2xl font-bold text-green-600 text-center mb-6">Datos del DNI Escaneado</h3>
-            <ul className="space-y-3 text-left">
-              <li>
-                <strong>Número de Trámite:</strong> {parsedData.numeroTramite}
-              </li>
-              <li>
-                <strong>Apellidos:</strong> {parsedData.apellidos}
-              </li>
-              <li>
-                <strong>Nombres:</strong> {parsedData.nombres}
-              </li>
-              <li>
-                <strong>Sexo:</strong> {parsedData.sexo}
-              </li>
-              <li>
-                <strong>Número de DNI:</strong> {parsedData.numeroDni}
-              </li>
-              <li>
-                <strong>Ejemplar:</strong> {parsedData.ejemplar}
-              </li>
-              <li>
-                <strong>Fecha de Nacimiento:</strong> {parsedData.fechaNacimiento}
-              </li>
-              <li>
-                <strong>Fecha de Emisión:</strong> {parsedData.fechaEmision}
-              </li>
-              {parsedData.cuil && parsedData.cuil.inicio && parsedData.cuil.fin && (
-                <li>
-                  <strong>CUIL:</strong> {parsedData.cuil.inicio}-{parsedData.numeroDni}-{parsedData.cuil.fin}
-                </li>
-              )}
-            </ul>
-            <div className="flex justify-between mt-6">
-              <button
-                onClick={handleSave}
-                className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-md"
-              >
-                Guardar Datos
-              </button>
-              <button
-                onClick={handleCancel}
-                className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-md"
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </div>

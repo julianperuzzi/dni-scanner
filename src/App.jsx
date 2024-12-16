@@ -7,8 +7,9 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import Scanner from './components/Scanner';
-import ParsedData from './components/ParsedData';
+import Scanner from './components/ScanData';
+import ParsedData from './components/ViewDniData';
+import ScanData from './components/ScanData';
 
 const App = () => {
   return (
@@ -18,12 +19,12 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/parsed-data" element={<ParsedData />} />
+          <Route path="/data" element={<ScanData />} />
           <Route
             path="/scan"
             element={
               <ProtectedRoute>
-                <Scanner />
+                <ScanDni />
               </ProtectedRoute>
             }
           />
