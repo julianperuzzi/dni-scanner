@@ -24,7 +24,7 @@ function ParsedData() {
           document_type: parsedData.ejemplar,
           birth_date: formatToISO(parsedData.fechaNacimiento),
           issue_date: formatToISO(parsedData.fechaEmision),
-          cuil_full: parsedData.cuil ? `${parsedData.cuil.inicio}${parsedData.numeroDni}${parsedData.cuil.fin}` : null,
+          cuil_full: parsedData.cuil ? parsedData.cuil : null,
         },
       ]);
 
