@@ -45,13 +45,37 @@ function ScanDni() {
   };
 
   const handleScan = (err, result) => {
+    if (err) {
+      setNotification({ message: "❌ Error al escanear. Intenta nuevamente.", type: "error" });
+      return;
+    }
+  
     if (result) {
-      setScannedData(result.text);
-      navigate('/data', { state: { scannedData: result.text } });  // Redirige a /data con los datos escaneados
-    } else if (err) {
-      console.error("Error al escanear:", err);
+      const parsed = parsePdf417(result.text);
+  
+      if (parsed) {
+        setParsedData(parsed);
+        validateParsedData(parsed); // Validar los datos inmediatamente
+      } else {
+        setNotification({ message: "❌ Datos incorrectos. Verifica el código escaneado.", type: "error" });
+      }
     }
   };
+  
+  const validateParsedData = (data) => {
+    const errors = [];
+  
+    if (!data.numeroDni || !data.apellidos || !data.nombres) {
+      errors.push("Faltan datos clave: DNI, apellidos o nombres.");
+    }
+  
+    if (errors.length > 0) {
+      setNotification({ message: errors.join(" "), type: "error" });
+    } else {
+      setNotification({ message: "", type: "" });
+    }
+  };
+  
 
   return (
     <div className="bg-gray-900">
