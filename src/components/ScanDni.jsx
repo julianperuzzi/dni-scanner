@@ -81,7 +81,9 @@ function ScanDni() {
       <button onClick={() => navigate("/manual-entry")} className=" m-2 bg-gray-600 text-white px-4 py-2 rounded-md ">
        Ingreso Manual
       </button>
+        <div className="p-2 bg-stone-900/50 absolute top-96 ">
 
+        </div>
       {cameraPermissionGranted ? (
         <BarcodeScanner selectedDeviceId={selectedDeviceId} handleScan={handleScan} />
       ) : (
