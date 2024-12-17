@@ -1,60 +1,56 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // Importamos useNavigate
+import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
-import { supabase } from "../supabaseClient";
 import CameraSelect from "./CameraSelect";
 import BarcodeScanner from "./BarcodeScannerComponent";
 
 function ScanDni() {
-  const [selectedDeviceId, setSelectedDeviceId] = useState(localStorage.getItem("selectedCamera") || null);
+  const [selectedDeviceId, setSelectedDeviceId] = useState(null);
   const [cameras, setCameras] = useState([]);
   const [scannedData, setScannedData] = useState("");
   const [notification, setNotification] = useState({ message: "", type: "" });
 
   const { user } = useUser();
-  const navigate = useNavigate(); // Función para redirigir
+  const navigate = useNavigate();
 
+  // Verifica si el usuario está autenticado
   useEffect(() => {
     if (!user) {
       window.location.href = "/login";
     }
   }, [user]);
 
+  // Obtiene la lista de cámaras y selecciona una por defecto
   useEffect(() => {
-    const initializeCameraPermissions = async () => {
+    const fetchCameras = async () => {
       try {
-        // Solicitar permisos para usar la cámara
-        await navigator.mediaDevices.getUserMedia({ video: true });
-
-        // Enumerar dispositivos de entrada de video
         const devices = await navigator.mediaDevices.enumerateDevices();
         const videoInputs = devices.filter((device) => device.kind === "videoinput");
-
         setCameras(videoInputs);
 
-        if (!selectedDeviceId && videoInputs.length > 0) {
-          const defaultCameraId = videoInputs[0].deviceId;
-          setSelectedDeviceId(defaultCameraId);
-          localStorage.setItem("selectedCamera", defaultCameraId);
+        // Selecciona la cámara predeterminada si no hay una seleccionada
+        if (videoInputs.length > 0) {
+          const savedCamera = localStorage.getItem("selectedCamera");
+          const defaultCamera = savedCamera || videoInputs[0].deviceId;
+          setSelectedDeviceId(defaultCamera);
+          localStorage.setItem("selectedCamera", defaultCamera);
         }
       } catch (error) {
-        console.error("Error al acceder a la cámara:", error);
-        setNotification({
-          message: "No se pudo acceder a la cámara. Por favor, verifica los permisos.",
-          type: "error",
-        });
+        console.error("Error al enumerar dispositivos:", error);
       }
     };
 
-    initializeCameraPermissions();
-  }, [selectedDeviceId]);
+    fetchCameras();
+  }, []); // Solo se ejecuta una vez al montar el componente
 
+  // Actualiza la cámara seleccionada
   const handleCameraSelect = (event) => {
     const deviceId = event.target.value;
     setSelectedDeviceId(deviceId);
     localStorage.setItem("selectedCamera", deviceId);
   };
 
+  // Maneja los resultados del escáner
   const handleScan = (err, result) => {
     if (result) {
       setScannedData(result.text);
@@ -72,9 +68,7 @@ function ScanDni() {
       </div>
       <BarcodeScanner selectedDeviceId={selectedDeviceId} handleScan={handleScan} />
       {notification.message && (
-        <div
-          className={`fixed top-60 left-1/2 transform text-2xl -translate-x-1/2 bg-indigo-900/70 text-white p-6 rounded-md text-center z-70 font-semibold uppercase`}
-        >
+        <div className={`fixed top-60 left-1/2 transform text-2xl -translate-x-1/2 bg-indigo-900/70 text-white p-6 rounded-md text-center z-70 font-semibold uppercase`}>
           {notification.message}
         </div>
       )}
