@@ -81,7 +81,7 @@ function ScanDni() {
       <button onClick={() => navigate("/manual-entry")} className=" m-2 bg-gray-600 text-white px-4 py-2 rounded-md ">
        Ingreso Manual
       </button>
-        <div className="p-12 green-900/70 absolute top-full w-full">
+        <div className="p-12 bg-green-900/70 absolute top-96 w-full mt-12">
 
         </div>
       {cameraPermissionGranted ? (
