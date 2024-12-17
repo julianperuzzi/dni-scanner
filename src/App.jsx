@@ -8,6 +8,7 @@ import Home from './pages/Home';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ScanData from './components/ScanData';
+import ManualEntry from './components/ManualEntry';
 
 const App = () => {
   return (
@@ -23,6 +24,14 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <ScanDni />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/manual-entry"
+            element={
+              <ProtectedRoute>
+                <ManualEntry />
               </ProtectedRoute>
             }
           />
