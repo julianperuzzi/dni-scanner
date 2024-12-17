@@ -104,15 +104,16 @@ function ManualEntry() {
             />
           </div>
           <div>
-            <label className="block font-semibold text-gray-700">Fecha de Nacimiento (DD/MM/YYYY):</label>
-            <input
-              type="text"
-              name="fechaNacimiento"
-              value={formData.fechaNacimiento}
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded-md p-2"
-            />
-          </div>
+  <label className="block font-semibold text-gray-700">Fecha de Nacimiento:</label>
+  <input
+    type="date"
+    name="fechaNacimiento"
+    value={formData.fechaNacimiento}
+    onChange={handleChange}
+    className="w-full border border-gray-300 rounded-md p-2"
+  />
+</div>
+
           <div>
             <label className="block font-semibold text-gray-700">Sexo:</label>
             <select
