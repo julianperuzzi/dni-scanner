@@ -13,7 +13,7 @@ function BarcodeScanner({ selectedDeviceId, handleScan }) {
         onUpdate={handleScan}
         videoConstraints={{
           deviceId: { exact: selectedDeviceId },
-          width: { ideal: 1920 },
+          width: { ideal: 108 },
           height: { ideal: 1080 },
         }}
       />
