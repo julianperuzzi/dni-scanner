@@ -1,98 +1,103 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../context/UserContext";
+import { supabase } from "../supabaseClient";
 import CameraSelect from "./CameraSelect";
 import BarcodeScanner from "./BarcodeScannerComponent";
 
 function ScanDni() {
-  const [selectedDeviceId, setSelectedDeviceId] = useState(null);
+  const [selectedDeviceId, setSelectedDeviceId] = useState(localStorage.getItem("selectedCamera") || null);
   const [cameras, setCameras] = useState([]);
-  const [loadingCameras, setLoadingCameras] = useState(true);
+  const [scannedData, setScannedData] = useState("");
+  const [notification, setNotification] = useState({ message: "", type: "" });
+  const [cameraPermissionGranted, setCameraPermissionGranted] = useState(false);
 
   const { user } = useUser();
   const navigate = useNavigate();
 
-  // Redirige al usuario al login si no está autenticado
   useEffect(() => {
     if (!user) {
-      navigate("/login");
+      window.location.href = "/login";
     }
-  }, [user, navigate]);
+  }, [user]);
 
-  // Obtiene las cámaras disponibles
   useEffect(() => {
-    const fetchCameras = async () => {
-      try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoInputs = devices.filter((device) => device.kind === "videoinput");
-
-        setCameras(videoInputs);
-
-        if (videoInputs.length > 0) {
-          const savedCamera = localStorage.getItem("selectedCamera");
-          const defaultCamera = savedCamera || videoInputs[0].deviceId;
-          setSelectedDeviceId(defaultCamera);
-          localStorage.setItem("selectedCamera", defaultCamera);
-        } else {
-          console.error("No se encontraron cámaras.");
-        }
-      } catch (error) {
-        console.error("Error al obtener cámaras:", error);
-      } finally {
-        setLoadingCameras(false);
-      }
-    };
-
-    fetchCameras();
+    // Solicitar permisos de cámara
+    navigator.mediaDevices
+      .getUserMedia({ video: true })
+      .then(() => {
+        setCameraPermissionGranted(true);
+        fetchCameras(); // Llamar a la función para enumerar cámaras si se otorgan permisos
+      })
+      .catch((error) => {
+        console.error("Permisos de cámara rechazados:", error);
+        setNotification({
+          message: "Permiso para usar la cámara denegado. Por favor, habilítalo en la configuración del navegador.",
+          type: "error",
+        });
+      });
   }, []);
 
-  // Maneja la selección de cámara
+  const fetchCameras = () => {
+    navigator.mediaDevices
+      .enumerateDevices()
+      .then((devices) => {
+        const videoInputs = devices.filter((device) => device.kind === "videoinput");
+        setCameras(videoInputs);
+
+        if (!selectedDeviceId && videoInputs.length > 0) {
+          const defaultCameraId = videoInputs[0].deviceId;
+          setSelectedDeviceId(defaultCameraId);
+          localStorage.setItem("selectedCamera", defaultCameraId);
+        }
+      })
+      .catch((error) => {
+        console.error("Error al enumerar dispositivos:", error);
+        setNotification({
+          message: "Error al acceder a las cámaras del dispositivo.",
+          type: "error",
+        });
+      });
+  };
+
   const handleCameraSelect = (event) => {
     const deviceId = event.target.value;
     setSelectedDeviceId(deviceId);
     localStorage.setItem("selectedCamera", deviceId);
   };
 
-  // Maneja el resultado del escaneo
-  const handleScan = (result) => {
+  const handleScan = (err, result) => {
     if (result) {
-      navigate("/data", { state: { scannedData: result } });
+      setScannedData(result.text);
+      navigate('/data', { state: { scannedData: result.text } }); // Redirige a /data con los datos escaneados
+    } else if (err) {
+      console.error("Error al escanear:", err);
     }
   };
-
-  // Maneja errores en el escaneo
-  const handleError = (error) => {
-    console.error("Error durante el escaneo:", error);
-  };
-
-  if (loadingCameras) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-gray-900 text-white">
-        <p>Cargando cámaras...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="bg-gray-900">
       <div className="flex border-b bg-gray-950">
-        <h3 className="text-xl font-bold p-2 mt-4 text-gray-300">
-          USER: {user?.username || "Invitado"}
-        </h3>
-        <CameraSelect
-          cameras={cameras}
-          selectedDeviceId={selectedDeviceId}
-          handleCameraSelect={handleCameraSelect}
-        />
+        <h3 className="text-xl font-bold p-2 mt-4 text-gray-300 ">USER: {user?.username}</h3>
+        {cameraPermissionGranted && (
+          <CameraSelect cameras={cameras} selectedDeviceId={selectedDeviceId} handleCameraSelect={handleCameraSelect} />
+        )}
       </div>
-      {selectedDeviceId ? (
-        <BarcodeScanner
-          selectedDeviceId={selectedDeviceId}
-          onScan={handleScan}
-          onError={handleError}
-        />
+      {cameraPermissionGranted ? (
+        <BarcodeScanner selectedDeviceId={selectedDeviceId} handleScan={handleScan} />
       ) : (
-        <p className="text-center text-white mt-4">Seleccione una cámara para comenzar.</p>
+        <div className="text-center text-white p-6">
+          <p className="text-xl">Por favor, habilita el acceso a la cámara para continuar.</p>
+        </div>
+      )}
+      {notification.message && (
+        <div
+          className={`fixed top-60 left-1/2 transform text-2xl -translate-x-1/2 ${
+            notification.type === "error" ? "bg-red-600" : "bg-indigo-900/70"
+          } text-white p-6 rounded-md text-center z-70 font-semibold uppercase`}
+        >
+          {notification.message}
+        </div>
       )}
     </div>
   );
