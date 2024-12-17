@@ -29,13 +29,7 @@ function ScanDni() {
         setCameraPermissionGranted(true);
         fetchCameras(); // Llamar a la función para enumerar cámaras si se otorgan permisos
       })
-      .catch((error) => {
-        console.error("Permisos de cámara rechazados:", error);
-        setNotification({
-          message: "Permiso para usar la cámara denegado. Por favor, habilítalo en la configuración del navegador.",
-          type: "error",
-        });
-      });
+      
   }, []);
 
   const fetchCameras = () => {
