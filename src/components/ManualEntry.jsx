@@ -18,6 +18,14 @@ function ManualEntry() {
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
+  const handleDateChange = (e) => {
+    let value = e.target.value.replace(/\D/g, ""); // Eliminar caracteres no numéricos
+    if (value.length > 2) value = value.slice(0, 2) + "/" + value.slice(2);
+    if (value.length > 5) value = value.slice(0, 5) + "/" + value.slice(5, 9);
+    setFormData((prevData) => ({ ...prevData, fechaNacimiento: value }));
+  };
+  
+
   const handleSave = async () => {
     const { apellidos, nombres, numeroDni, fechaNacimiento, sexo } = formData;
 
@@ -104,15 +112,19 @@ function ManualEntry() {
             />
           </div>
           <div>
-  <label className="block font-semibold text-gray-700">Fecha de Nacimiento:</label>
+  <label className="block font-semibold text-gray-700">Fecha de Nacimiento (DD/MM/YYYY):</label>
   <input
-    type="date"
+    type="text"
     name="fechaNacimiento"
     value={formData.fechaNacimiento}
-    onChange={handleChange}
+    onChange={handleDateChange}
+    maxLength={10}
+    placeholder="DD/MM/YYYY"
     className="w-full border border-gray-300 rounded-md p-2"
   />
 </div>
+
+     
 
           <div>
             <label className="block font-semibold text-gray-700">Sexo:</label>
