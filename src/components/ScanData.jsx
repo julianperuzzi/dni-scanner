@@ -97,7 +97,7 @@ function ScanData() {
       setTimeout(() => {
         setNotification({ message: "", type: "" });
         navigate("/scan"); // Redirige de vuelta a la página de escaneo
-      }, 2000);
+      }, 1000);
   
     } catch (err) {
       setNotification({ message: "❌ Error al guardar los datos. Intenta nuevamente.", type: "error" });
@@ -105,7 +105,7 @@ function ScanData() {
       // Mostrar notificación por 2 segundos en caso de error
       setTimeout(() => {
         setNotification({ message: "", type: "" });
-      }, 2000);
+      }, 1000);
     }
   };
   
