@@ -55,7 +55,7 @@ const Home = () => {
 
         <div className="bg-gray-800 p-8 rounded-xl shadow-lg text-center transition duration-300 hover:shadow-2xl">
           <h3 className="text-xl font-semibold text-gray-100 mb-4">Mis Datos Escaneados</h3>
-          <p className="mb-4 text-gray-400">Consulta los datos escaneados previamente desde tu cuenta.</p>
+          <p className="mb-4 text-gray-400">Acceso a todos los Datos Escaneados, exclusivo perfil Adminitrador</p>
           {user ? (
             <Link
               to="/my-data"
