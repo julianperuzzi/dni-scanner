@@ -22,9 +22,9 @@ const App = () => {
           <Route
             path="/scan"
             element={
-              <ProtectedRoute>
+              
                 <ScanDni />
-              </ProtectedRoute>
+              
             }
           />
           <Route
